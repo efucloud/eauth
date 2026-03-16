@@ -1,0 +1,14 @@
+package daos
+
+const ApplicationTableName = "application"
+const AppAuthRecordTableName = "app_auth_record"
+const ConfigTableName = "config"
+const FaceRecognitionTableName = "face_recognition"
+const MultiFactorAuthTableName = "multi_factor_auth"
+const ProviderLdapTableName = "provider_ldap"
+const ProviderOidcTableName = "provider_oidc"
+const UserTableName = "user"
+const UserAuthProfileTableName = "user_auth_profile"
+const UserAuthProfileTempTableName = "user_auth_profile_temp"
+const UserTokenTableName = "user_token"
+const ValidateCodeTableName = "validate_code"

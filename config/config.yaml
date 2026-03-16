@@ -1,0 +1,31 @@
+email:
+  password: ltapxououmwlbggd
+  smtpPort: 465
+  smtpServer: smtp.qq.com
+  username: 272685110@qq.com
+logConfig:
+  compress: false
+  filename: ""
+  localtime: false
+  maxage: 0
+  maxbackups: 0
+  maxsize: 0
+  production: true
+loginConfig:
+  faceRecognition: true
+  mfa: false
+mysql:
+  charset: utf8
+  dbname: eauth
+  defaultStringSize: 0
+  disableDatetimePrecision: false
+  dontSupportRenameColumn: false
+  dontSupportRenameIndex: false
+  host: localhost:3306
+  loc: ""
+  password: EfuCloud
+  skipInitializeWithVersion: false
+  user: root
+serverAddress: http://localhost:8000
+tokenPeriod: 16
+uploadPath: ""

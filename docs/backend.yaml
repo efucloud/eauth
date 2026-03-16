@@ -1,0 +1,119 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: eauth-config
+  namespace: efucloud
+type: Opaque
+stringData:
+  config.yaml: |
+    # 在macos的kind上部署，192.168.3.12为macos的本机IP，通过kubectl port-forward 提供本地代
+    serverAddress: "http://192.168.3.12:8000" 
+    tokenPeriod: 16
+    uploadPath: "/efucloud/uploads"
+    loginConfig:
+      faceRecognition: true
+      mfa: false
+    mysql:
+      host: "mysql:3306"
+      user: "root"
+      password: "EfuCloudPSD"
+      dbname: "eauth"
+      charset: "utf8mb4"
+      loc: "Asia/Shanghai"
+      defaultStringSize: 0
+      disableDatetimePrecision: false
+      dontSupportRenameColumn: false
+      dontSupportRenameIndex: false
+      skipInitializeWithVersion: false
+    email:
+      smtpServer: "smtp.qq.com"
+      smtpPort: 465
+      username: "noreply@example.com"
+      password: "CHANGE_ME"
+    
+    logConfig:
+      production: true
+      filename: ""
+      maxsize: 100
+      maxbackups: 7
+      maxage: 30
+      compress: true
+      localtime: true
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eauth
+  namespace: efucloud
+  labels:
+    app: eauth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eauth
+  template:
+    metadata:
+      labels:
+        app: eauth
+    spec:
+      containers:
+      - name: eauth
+        image: registry.cn-shenzhen.aliyuncs.com/efucloud-public/eauth:v1.0.0.202603161846
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 9001
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 9001
+          initialDelaySeconds: 8
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 6
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 9001
+          initialDelaySeconds: 20
+          periodSeconds: 15
+          timeoutSeconds: 3
+          failureThreshold: 5
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: "1"
+            memory: 1Gi
+        volumeMounts:
+        - name: config
+          mountPath: /efucloud/config/config.yaml
+          subPath: config.yaml
+        - name: uploads
+          mountPath: /efucloud/uploads
+      volumes:
+      - name: config
+        secret:
+          secretName: eauth-config
+      - name: uploads
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eauth
+  namespace: efucloud
+  labels:
+    app: eauth
+spec:
+  type: ClusterIP
+  selector:
+    app: eauth
+  ports:
+  - name: http
+    port: 9001
+    targetPort: 9001
+    protocol: TCP

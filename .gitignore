@@ -1,0 +1,17 @@
+/_output
+/vendor
+.idea
+.vscode
+.DS_Store
+/build
+test
+**/public.pem
+*.db
+/oidc-cfg
+/flow
+/log
+/generates
+/generate
+/uploads
+*.go-bak
+/casdoor

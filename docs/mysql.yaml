@@ -1,0 +1,83 @@
+# mysql-pvc.yaml
+#apiVersion: v1
+#kind: PersistentVolumeClaim
+#metadata:
+#  name: mysql-pvc
+#  namespace: efucloud
+#spec:
+#  storageClassName: mysql-local-retain
+#  accessModes:
+#    - ReadWriteOnce
+#  resources:
+#    requests:
+#      storage: 50Gi
+---
+# mysql-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-config
+  namespace: efucloud
+data:
+  my.cnf: |
+    [mysqld]
+    character-set-server=utf8mb4
+    collation-server=utf8mb4_unicode_ci
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: efucloud
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: registry.cn-shenzhen.aliyuncs.com/efucloud-public/mysql:9.5.0
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: "EfuCloudPSD"
+            - name: MYSQL_DATABASE
+              value: "eauth"
+            # 注意：不再依赖 MYSQL_DATABASE 自动建库（因字符集可能不对）
+          volumeMounts:
+#            - name: mysql-data
+#              mountPath: /var/lib/mysql
+            - name: mysql-config
+              mountPath: /etc/mysql/conf.d/my.cnf
+              subPath: my.cnf
+      volumes:
+#        - name: mysql-data
+#          persistentVolumeClaim:
+#            claimName: mysql-pvc
+        - name: mysql-config
+          configMap:
+            name: mysql-config
+      securityContext:
+        fsGroup: 999
+---
+# mysql-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: efucloud
+spec:
+  selector:
+    app: mysql
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+  type: ClusterIP # 内部访问；如需外部访问，改为 NodePort 或 LoadBalancer
