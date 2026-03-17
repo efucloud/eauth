@@ -14,6 +14,8 @@ import (
 	"github.com/go-jose/go-jose/v4"
 	jsoniter "github.com/json-iterator/go"
 	"net/http"
+	"net/url"
+	"strings"
 )
 
 type OAuthResource struct {
@@ -121,7 +123,7 @@ func (r OAuthResource) AddWebService(ws *restful.WebService) {
 		Param(ws.QueryParameter("client_id", "client ID")).
 		Param(ws.QueryParameter("client_secret", "client TotpSecret，使用场景:grant_type 为"+
 			config.GrantTypePassword+";"+config.GrantTypeClientCredentials)).
-		Param(ws.QueryParameter("grant_type ", "Grant Type").
+		Param(ws.QueryParameter("grant_type", "Grant Type").
 			PossibleValues([]string{
 				config.GrantTypePassword,
 				config.GrantTypeAuthorizationCode,
@@ -130,6 +132,7 @@ func (r OAuthResource) AddWebService(ws *restful.WebService) {
 				config.GrantTypeClientCredentials})).
 		Param(ws.QueryParameter("code", "StateCode")).
 		Param(ws.QueryParameter("redirect_uri", "Redirect URI")).
+		Param(ws.QueryParameter("code_verifier", "PKCE code verifier")).
 		Param(ws.QueryParameter("username", "Username")).
 		Param(ws.QueryParameter("password", "Password")).
 		Consumes(restful.MIME_JSON, config.RequestForm).
@@ -144,7 +147,7 @@ func (r OAuthResource) AddWebService(ws *restful.WebService) {
 		Param(ws.QueryParameter("client_id", "client ID")).
 		Param(ws.QueryParameter("client_secret", "client TotpSecret，使用场景:grant_type 为"+
 			config.GrantTypePassword+";"+config.GrantTypeClientCredentials)).
-		Param(ws.QueryParameter("grant_type ", "Grant Type").
+		Param(ws.QueryParameter("grant_type", "Grant Type").
 			PossibleValues([]string{
 				config.GrantTypePassword,
 				config.GrantTypeAuthorizationCode,
@@ -153,6 +156,7 @@ func (r OAuthResource) AddWebService(ws *restful.WebService) {
 				config.GrantTypeClientCredentials})).
 		Param(ws.QueryParameter("code", "StateCode")).
 		Param(ws.QueryParameter("redirect_uri", "Redirect URI")).
+		Param(ws.QueryParameter("code_verifier", "PKCE code verifier")).
 		Param(ws.QueryParameter("username", "Username")).
 		Param(ws.QueryParameter("password", "Password")).
 		Consumes(restful.MIME_JSON, config.RequestForm).
@@ -344,7 +348,24 @@ func (r OAuthResource) getOidcCode(req *restful.Request, resp *restful.Response)
 	}
 	ctx = context.WithValue(ctx, config.RequestLanguage, lang)
 
-	errorData.Err = jsoniter.NewDecoder(req.Request.Body).Decode(&model)
+	contentType := req.Request.Header.Get("Content-Type")
+	if strings.Contains(contentType, config.RequestForm) {
+		errorData.Err = req.Request.ParseForm()
+		if errorData.IsNil() {
+			fillOidcCodeRequestFromForm(&model, req.Request.PostForm)
+		}
+	} else {
+		errorData.Err = jsoniter.NewDecoder(req.Request.Body).Decode(&model)
+	}
+	if len(model.GetCodeChallenge()) == 0 {
+		model.CodeChallenge = firstNotEmpty(req.QueryParameter("codeChallenge"), req.QueryParameter("code_challenge"))
+	}
+	if len(model.GetCodeChallengeMethod()) == 0 {
+		model.CodeChallengeMethod = firstNotEmpty(req.QueryParameter("codeChallengeMethod"), req.QueryParameter("code_challenge_method"))
+	}
+	if len(model.GetCodeChallenge()) == 0 || len(model.GetCodeChallengeMethod()) == 0 {
+		fillOidcCodeRequestFromReferer(&model, req.Request.Header.Get("Referer"))
+	}
 	if errorData.IsNotNil() {
 		config.Logger.Errorf("decode json format data failed, err: %s", errorData.Err.Error())
 		errorData.MsgCode = config.MsgCodeJsonDecodeFailed
@@ -369,6 +390,66 @@ func (r OAuthResource) getOidcCode(req *restful.Request, resp *restful.Response)
 	}
 	common.ResponseSuccess(resp, result)
 }
+
+func fillOidcCodeRequestFromForm(model *dtos.OidcCodeRequest, form map[string][]string) {
+	model.ClientId = formFirstValue(form, "clientId", "client_id")
+	model.RedirectUri = formFirstValue(form, "redirectUri", "redirect_uri")
+	model.State = formFirstValue(form, "state")
+	model.ResponseType = formFirstValue(form, "responseType", "response_type")
+	model.CodeChallenge = formFirstValue(form, "codeChallenge")
+	model.CodeChallengeMethod = formFirstValue(form, "codeChallengeMethod")
+	model.CodeChallengeStd = formFirstValue(form, "code_challenge")
+	model.CodeChallengeMethodStd = formFirstValue(form, "code_challenge_method")
+}
+
+func fillOidcCodeRequestFromReferer(model *dtos.OidcCodeRequest, referer string) {
+	if len(referer) == 0 {
+		return
+	}
+	parsed, err := url.Parse(referer)
+	if err != nil {
+		return
+	}
+	query := parsed.Query()
+	if len(model.ClientId) == 0 {
+		model.ClientId = firstNotEmpty(query.Get("clientId"), query.Get("client_id"))
+	}
+	if len(model.RedirectUri) == 0 {
+		model.RedirectUri = firstNotEmpty(query.Get("redirectUri"), query.Get("redirect_uri"))
+	}
+	if len(model.State) == 0 {
+		model.State = query.Get("state")
+	}
+	if len(model.ResponseType) == 0 {
+		model.ResponseType = firstNotEmpty(query.Get("responseType"), query.Get("response_type"))
+	}
+	if len(model.GetCodeChallenge()) == 0 {
+		model.CodeChallenge = firstNotEmpty(query.Get("codeChallenge"), query.Get("code_challenge"))
+	}
+	if len(model.GetCodeChallengeMethod()) == 0 {
+		model.CodeChallengeMethod = firstNotEmpty(query.Get("codeChallengeMethod"), query.Get("code_challenge_method"))
+	}
+}
+
+func formFirstValue(form map[string][]string, keys ...string) string {
+	for _, key := range keys {
+		values, ok := form[key]
+		if ok && len(values) > 0 && len(values[0]) > 0 {
+			return values[0]
+		}
+	}
+	return ""
+}
+
+func firstNotEmpty(values ...string) string {
+	for _, value := range values {
+		if len(value) > 0 {
+			return value
+		}
+	}
+	return ""
+}
+
 func (r OAuthResource) selfInfo(req *restful.Request, resp *restful.Response) {
 	var (
 		errorData common.ErrorData
@@ -428,7 +509,7 @@ func (r OAuthResource) thirdAuthMethods(req *restful.Request, resp *restful.Resp
 
 func (r OAuthResource) revoke(req *restful.Request, resp *restful.Response)     {}
 func (r OAuthResource) introspect(req *restful.Request, resp *restful.Response) {}
- 
+
 func (r OAuthResource) loginByOIDC(req *restful.Request, resp *restful.Response) {
 	lang := common.GetLanguageFromReq(req, config.RequestLanguage)
 	var (
@@ -594,9 +675,10 @@ func (r OAuthResource) token(req *restful.Request, resp *restful.Response) {
 	}
 	ctx = context.WithValue(ctx, config.RequestLanguage, lang)
 
-	grantType := req.QueryParameter("grant_type ")
+	grantType := req.QueryParameter("grant_type")
 	if len(grantType) == 0 {
-		grantType = req.Request.Form.Get("grant_type ")
+		_ = req.Request.ParseForm()
+		grantType = firstNotEmpty(req.Request.Form.Get("grant_type"), req.Request.Form.Get("grant_type "))
 	}
 	switch grantType {
 	case config.GrantTypeAuthorizationCode:

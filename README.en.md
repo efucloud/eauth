@@ -5,6 +5,10 @@
 EAuth is a unified authentication platform for enterprise scenarios, positioned similarly to Auth0 and Dex.  
 It can act as an OIDC identity provider for business systems and can also integrate with external third-party identity platforms to provide a consistent login experience and centralized authentication policy.
 
+## Frontend Repository
+
+https://github.com/efucloud/eauth-console
+
 ## Project Background
 
 In multi-system, multi-organization, and multi-device environments, identity and authentication often face these challenges:
@@ -114,4 +118,4 @@ Deployment manifests are provided:
 - `docs/backend.yaml`
 - `docs/frontend.yaml`
 
-Deployment guide: `docs/README.md`.
+Deployment guide: `docs/README.en.md`.

@@ -28,6 +28,7 @@ kubectl apply -f docs/namespace.yaml
 kubectl apply -f docs/mysql.yaml
 kubectl apply -f docs/backend.yaml
 kubectl apply -f docs/frontend.yaml
+kubectl port-forward -n efucloud svc/eauth-console 8000:80
 ```
 
 You can also apply all manifests at once:

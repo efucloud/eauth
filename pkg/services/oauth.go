@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/rsa"
 	"crypto/x509"
-	"encoding/base64"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -16,7 +16,6 @@ import (
 	"github.com/go-jose/go-jose/v4"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/schema"
-	jsoniter "github.com/json-iterator/go"
 	"github.com/pquerna/otp/totp"
 	"golang.org/x/oauth2"
 	"net/url"
@@ -29,11 +28,17 @@ type OAuthService struct {
 
 func (svc *OAuthService) ApplicationAuthCode(ctx context.Context, userId uint, model dtos.OidcCodeRequest) (result dtos.OidcCodeResponse, errorData common.ErrorData) {
 	var (
-		user dtos.UserDetail
-		app  dtos.ApplicationDetail
+		user                          dtos.UserDetail
+		app                           dtos.ApplicationDetail
+		codeChallenge                 string
+		codeChallengeMethodNormalized string
 	)
 	if model.ResponseType != "code" {
 		errorData.Err = fmt.Errorf("response_type  must be code ")
+		return
+	}
+	codeChallenge, codeChallengeMethodNormalized, errorData.Err = normalizePKCEParams(model.GetCodeChallenge(), model.GetCodeChallengeMethod())
+	if errorData.IsNotNil() {
 		return
 	}
 
@@ -56,9 +61,11 @@ func (svc *OAuthService) ApplicationAuthCode(ctx context.Context, userId uint, m
 	result.State = model.State
 	result.RedirectUri = fmt.Sprintf("%s?code=%s&state=%s", model.RedirectUri, result.Code, model.State)
 	authApp := dtos.AppAuthRecordCreate{
-		ApplicationId: app.ID,
-		Code:          result.Code,
-		UserId:        user.ID,
+		ApplicationId:       app.ID,
+		Code:                result.Code,
+		CodeChallenge:       codeChallenge,
+		CodeChallengeMethod: codeChallengeMethodNormalized,
+		UserId:              user.ID,
 	}
 	appAuthSvc := AppAuthRecordService{}
 	_, errorData = appAuthSvc.AddAppAuthRecord(ctx, authApp)
@@ -124,22 +131,24 @@ func (svc *OAuthService) GetTokenByAuthorizationCode(ctx context.Context, req *r
 		app        dtos.ApplicationDetail
 	)
 
-	if strings.Contains(req.Request.Header.Get("Content-Type"), config.RequestForm) {
+	contentType := req.Request.Header.Get("Content-Type")
+	if strings.Contains(contentType, config.RequestForm) || req.Request.Method == "GET" || len(contentType) == 0 {
 		decoder := schema.NewDecoder()
-		errorData.Err = decoder.Decode(&model, req.Request.Form)
-		header := req.HeaderParameter(config.AuthHeader)
-		if len(header) > 0 && strings.HasPrefix(header, "Basic") {
-			authData := strings.TrimPrefix(header, "Basic ")
-			if decodedBytes, er := base64.StdEncoding.DecodeString(authData); er == nil {
-				authInfo := strings.Split(string(decodedBytes), ":")
-				if len(authInfo) == 2 {
-					model.ClientId = authInfo[0]
-					model.ClientSecret = authInfo[1]
-				}
+		decoder.IgnoreUnknownKeys(true)
+		errorData.Err = req.Request.ParseForm()
+		if errorData.IsNil() {
+			formValues := req.Request.PostForm
+			if len(formValues) == 0 {
+				formValues = req.Request.Form
 			}
+			errorData.Err = decoder.Decode(&model, formValues)
+		}
+		if username, password, ok := req.Request.BasicAuth(); ok {
+			model.ClientId = username
+			model.ClientSecret = password
 		}
 	} else {
-		errorData.Err = jsoniter.NewDecoder(req.Request.Body).Decode(&model)
+		errorData.Err = json.NewDecoder(req.Request.Body).Decode(&model)
 	}
 	if errorData.IsNotNil() {
 		config.Logger.Error(errorData.Err)
@@ -172,7 +181,37 @@ func (svc *OAuthService) GetTokenByAuthorizationCode(ctx context.Context, req *r
 		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
 		return
 	}
-	if app.ClientSecret != model.ClientSecret {
+	if len(model.ClientId) > 0 && model.ClientId != app.ClientId {
+		errorData.Err = fmt.Errorf("client id: %s is not right", model.ClientId)
+		config.Logger.Error(errorData.Err)
+		errorData.Lang = lang
+		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
+		return
+	}
+	errorData.Err = verifyPKCE(authRecord.CodeChallenge, authRecord.CodeChallengeMethod, model.GetCodeVerifier())
+	if errorData.IsNotNil() {
+		config.Logger.Error(errorData.Err)
+		errorData.Lang = lang
+		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
+		return
+	}
+	if len(authRecord.CodeChallenge) == 0 && len(model.ClientSecret) == 0 {
+		errorData.Err = fmt.Errorf("authorization code has no code_challenge, public client must send code_challenge in /oidc/code request")
+		config.Logger.Error(errorData.Err)
+		errorData.Lang = lang
+		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
+		return
+	}
+	isPKCEPublicClient := len(authRecord.CodeChallenge) > 0 && len(model.ClientSecret) == 0
+	if isPKCEPublicClient {
+		if len(model.ClientId) == 0 {
+			errorData.Err = fmt.Errorf("client_id is required for pkce public client")
+			config.Logger.Error(errorData.Err)
+			errorData.Lang = lang
+			common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
+			return
+		}
+	} else if app.ClientSecret != model.ClientSecret {
 		errorData.Err = fmt.Errorf("client secret: %s is not right", model.ClientSecret)
 		config.Logger.Error(errorData.Err)
 		errorData.Lang = lang
@@ -380,6 +419,7 @@ func (svc *OAuthService) GetDiscoveryInfo(ctx context.Context) (discovery dtos.O
 		IdTokenSigningAlgValuesSupported:       []string{"RS256"},
 		ScopesSupported:                        []string{"openid", "email", "profile", "phone", "role"},
 		ClaimsSupported:                        []string{"iss", "ver", "sub", "aud", "iat", "exp", "id", "type ", "email", "phone"},
+		CodeChallengeMethodsSupported:          []string{"S256", "plain"},
 		RequestParameterSupported:              true,
 		RequestObjectSigningAlgValuesSupported: []string{"HS256", "HS384", "HS512"},
 	}

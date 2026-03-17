@@ -171,11 +171,22 @@ type OidcRequestToken struct {
 	//客户端密钥
 	ClientSecret string `schema:"client_secret" json:"client_secret" validate:"required"`
 	//类型
-	GrantType string `schema:"grant_type " json:"grant_type " validate:"required"`
+	GrantType string `schema:"grant_type" json:"grant_type" validate:"required"`
 	//请求码
 	Code string `schema:"code" json:"code" validate:"required" `
 	//重定向地址
 	RedirectUri string `schema:"redirect_uri" json:"redirect_uri"`
+	//PKCE验证码
+	CodeVerifier string `schema:"code_verifier" json:"code_verifier"`
+	//PKCE验证码(camel风格兼容)
+	CodeVerifierCamel string `schema:"codeVerifier" json:"codeVerifier"`
+}
+
+func (md *OidcRequestToken) GetCodeVerifier() string {
+	if len(md.CodeVerifier) > 0 {
+		return md.CodeVerifier
+	}
+	return md.CodeVerifierCamel
 }
 
 // AccessTokenResponse 登录获取token
@@ -226,7 +237,30 @@ type OidcCodeRequest struct {
 	State string `json:"state" description:"状态码"`
 	//响应类型
 	ResponseType string `json:"responseType" description:"响应类型"`
+	//PKCE挑战值(camel风格)
+	CodeChallenge string `json:"codeChallenge" description:"PKCE挑战值"`
+	//PKCE挑战方法(camel风格)
+	CodeChallengeMethod string `json:"codeChallengeMethod" description:"PKCE挑战方法,plain或S256"`
+	//PKCE挑战值(标准风格)
+	CodeChallengeStd string `json:"code_challenge" description:"PKCE挑战值"`
+	//PKCE挑战方法(标准风格)
+	CodeChallengeMethodStd string `json:"code_challenge_method" description:"PKCE挑战方法,plain或S256"`
 }
+
+func (md *OidcCodeRequest) GetCodeChallenge() string {
+	if len(md.CodeChallenge) > 0 {
+		return md.CodeChallenge
+	}
+	return md.CodeChallengeStd
+}
+
+func (md *OidcCodeRequest) GetCodeChallengeMethod() string {
+	if len(md.CodeChallengeMethod) > 0 {
+		return md.CodeChallengeMethod
+	}
+	return md.CodeChallengeMethodStd
+}
+
 type OidcCodeResponse struct {
 	Code string `json:"code" description:"响应码"`
 	//状态码
@@ -250,6 +284,7 @@ type OpenIDConfiguration struct {
 	IdTokenSigningAlgValuesSupported       []string `json:"id_token_signing_alg_values_supported" description:""`
 	ScopesSupported                        []string `json:"scopes_supported" description:""`
 	ClaimsSupported                        []string `json:"claims_supported" description:""`
+	CodeChallengeMethodsSupported          []string `json:"code_challenge_methods_supported,omitempty" description:"支持的PKCE挑战算法"`
 	RequestParameterSupported              bool     `json:"request_parameter_supported" description:""`
 	RequestObjectSigningAlgValuesSupported []string `json:"request_object_signing_alg_values_supported" description:""`
 }

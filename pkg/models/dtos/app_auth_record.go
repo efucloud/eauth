@@ -29,6 +29,10 @@ type AppAuthRecordDetail struct {
 	ApplicationId uint `json:"applicationId" description:"应用ID"`
 	//响应编码 返回给浏览器客户端
 	Code string `gorm:"type:varchar(50);column:code" json:"code" validate:"required" description:"响应编码"`
+	//PKCE挑战值
+	CodeChallenge string `gorm:"type:varchar(255);column:code_challenge" json:"codeChallenge" description:"PKCE挑战值"`
+	//PKCE挑战方式
+	CodeChallengeMethod string `gorm:"type:varchar(20);column:code_challenge_method" json:"codeChallengeMethod" description:"PKCE挑战方式"`
 	//用户ID
 	UserId uint `gorm:"column:user_id" json:"userId" validate:"required" description:"用户ID"`
 }
@@ -41,6 +45,10 @@ type AppAuthRecordCreate struct {
 	ApplicationId uint `json:"applicationId" description:"应用ID"`
 	//响应编码 返回给浏览器客户端
 	Code string `gorm:"type:varchar(50);column:code" json:"code" validate:"required" description:"响应编码"`
+	//PKCE挑战值
+	CodeChallenge string `gorm:"type:varchar(255);column:code_challenge" json:"codeChallenge" description:"PKCE挑战值"`
+	//PKCE挑战方式
+	CodeChallengeMethod string `gorm:"type:varchar(20);column:code_challenge_method" json:"codeChallengeMethod" description:"PKCE挑战方式"`
 	//用户ID
 	UserId uint `gorm:"column:user_id" json:"userId" validate:"required" description:"用户ID"`
 }
