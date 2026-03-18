@@ -35,6 +35,8 @@ type AppAuthRecordDetail struct {
 	CodeChallengeMethod string `gorm:"type:varchar(20);column:code_challenge_method" json:"codeChallengeMethod" description:"PKCE挑战方式"`
 	//用户ID
 	UserId uint `gorm:"column:user_id" json:"userId" validate:"required" description:"用户ID"`
+	//OIDC nonce
+	Nonce string `gorm:"type:varchar(255);column:nonce" json:"nonce" description:"OIDC nonce"`
 }
 
 // AppAuthRecordCreate 应用认证记录创建
@@ -51,6 +53,8 @@ type AppAuthRecordCreate struct {
 	CodeChallengeMethod string `gorm:"type:varchar(20);column:code_challenge_method" json:"codeChallengeMethod" description:"PKCE挑战方式"`
 	//用户ID
 	UserId uint `gorm:"column:user_id" json:"userId" validate:"required" description:"用户ID"`
+	//OIDC nonce
+	Nonce string `gorm:"type:varchar(255);column:nonce" json:"nonce" description:"OIDC nonce"`
 }
 
 func (ins *AppAuthRecordCreate) Default(ctx context.Context) {

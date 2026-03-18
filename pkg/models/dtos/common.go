@@ -245,6 +245,8 @@ type OidcCodeRequest struct {
 	CodeChallengeStd string `json:"code_challenge" description:"PKCE挑战值"`
 	//PKCE挑战方法(标准风格)
 	CodeChallengeMethodStd string `json:"code_challenge_method" description:"PKCE挑战方法,plain或S256"`
+	//OIDC nonce
+	Nonce string `json:"nonce" description:"OIDC nonce"`
 }
 
 func (md *OidcCodeRequest) GetCodeChallenge() string {

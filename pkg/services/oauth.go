@@ -66,6 +66,7 @@ func (svc *OAuthService) ApplicationAuthCode(ctx context.Context, userId uint, m
 		CodeChallenge:       codeChallenge,
 		CodeChallengeMethod: codeChallengeMethodNormalized,
 		UserId:              user.ID,
+		Nonce:               model.Nonce,
 	}
 	appAuthSvc := AppAuthRecordService{}
 	_, errorData = appAuthSvc.AddAppAuthRecord(ctx, authApp)
@@ -219,6 +220,10 @@ func (svc *OAuthService) GetTokenByAuthorizationCode(ctx context.Context, req *r
 		return
 	}
 
+	if len(authRecord.Nonce) > 0 {
+		ctx = context.WithValue(ctx, config.RequestNonce, authRecord.Nonce)
+	}
+
 	token, errorData = svc.GenerateTokenResponse(ctx, true, app.ClientId, user)
 	if errorData.IsNotNil() {
 		config.Logger.Error(errorData.Err)
@@ -341,6 +346,9 @@ func (svc *OAuthService) GenerateBaseClaims(ctx context.Context, nowTime time.Ti
 	claims.ID = claimsID
 	claims.Subject = fmt.Sprintf("%d", user.ID)
 	claims.Audience = []string{}
+	if nonce := ctx.Value(config.RequestNonce); nonce != nil {
+		claims.Nonce = fmt.Sprintf("%v", nonce)
+	}
 	claims.ExpiresAt = jwt.NewNumericDate(expireTime)
 	claims.NotBefore = jwt.NewNumericDate(nowTime)
 	claims.IssuedAt = jwt.NewNumericDate(nowTime)

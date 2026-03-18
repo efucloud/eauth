@@ -366,6 +366,12 @@ func (r OAuthResource) getOidcCode(req *restful.Request, resp *restful.Response)
 	if len(model.GetCodeChallenge()) == 0 || len(model.GetCodeChallengeMethod()) == 0 {
 		fillOidcCodeRequestFromReferer(&model, req.Request.Header.Get("Referer"))
 	}
+	if len(model.Nonce) == 0 {
+		model.Nonce = req.QueryParameter("nonce")
+	}
+	if len(model.Nonce) == 0 {
+		fillOidcCodeRequestFromReferer(&model, req.Request.Header.Get("Referer"))
+	}
 	if errorData.IsNotNil() {
 		config.Logger.Errorf("decode json format data failed, err: %s", errorData.Err.Error())
 		errorData.MsgCode = config.MsgCodeJsonDecodeFailed
@@ -400,6 +406,7 @@ func fillOidcCodeRequestFromForm(model *dtos.OidcCodeRequest, form map[string][]
 	model.CodeChallengeMethod = formFirstValue(form, "codeChallengeMethod")
 	model.CodeChallengeStd = formFirstValue(form, "code_challenge")
 	model.CodeChallengeMethodStd = formFirstValue(form, "code_challenge_method")
+	model.Nonce = formFirstValue(form, "nonce")
 }
 
 func fillOidcCodeRequestFromReferer(model *dtos.OidcCodeRequest, referer string) {
@@ -428,6 +435,9 @@ func fillOidcCodeRequestFromReferer(model *dtos.OidcCodeRequest, referer string)
 	}
 	if len(model.GetCodeChallengeMethod()) == 0 {
 		model.CodeChallengeMethod = firstNotEmpty(query.Get("codeChallengeMethod"), query.Get("code_challenge_method"))
+	}
+	if len(model.Nonce) == 0 {
+		model.Nonce = query.Get("nonce")
 	}
 }
 

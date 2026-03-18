@@ -65,6 +65,7 @@ const (
 	RequestLanguage        = "RequestLanguage"
 	RequestUserAgentHeader = "X-Agent"
 	RequestContext         = "RequestContext"
+	RequestNonce           = "RequestNonce"
 	RequestRemote          = "RequestRemote"
 	AuthHeader             = "Authorization"
 	XApiKey                = "X--ApiKey"

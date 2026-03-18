@@ -22,6 +22,8 @@ type AppAuthRecord struct {
 	CodeChallengeMethod string `gorm:"type:varchar(20);column:code_challenge_method" json:"codeChallengeMethod" description:"PKCE挑战方式"`
 	//用户ID
 	UserId uint `gorm:"column:user_id;index" json:"userId" validate:"required" description:"用户ID"`
+	//OIDC nonce
+	Nonce string `gorm:"type:varchar(255);column:nonce" json:"nonce" description:"OIDC nonce"`
 }
 type AppAuthRecordList struct {
 	Data  []*AppAuthRecord `json:"data" description:"数据列表"`
