@@ -32,6 +32,7 @@ func GetWebServices(container *restful.Container) *restful.WebService {
 	system.FaceRecognitionResource{Svc: services.FaceRecognitionService{}}.AddWebService(ws)
 	system.ProviderLdapResource{Svc: services.ProviderLdapService{}}.AddWebService(ws)
 	system.ProviderOidcResource{Svc: services.ProviderOidcService{}}.AddWebService(ws)
+	system.ProviderSamlResource{Svc: services.ProviderSamlService{}}.AddWebService(ws)
 	system.UserResource{Svc: services.UserService{}}.AddWebService(ws)
 	system.UserAuthProfileResource{Svc: services.UserAuthProfileService{}}.AddWebService(ws)
 	system.UserTokenResource{Svc: services.UserTokenService{}}.AddWebService(ws)

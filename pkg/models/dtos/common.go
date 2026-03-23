@@ -164,6 +164,30 @@ type LoginByOIDC struct {
 	RedirectUri string `json:"redirectUri" description:"重定向地址"`
 }
 
+// LoginBySAML SAML登录
+type LoginBySAML struct {
+	RememberMe      string `json:"rememberMe" enum:"-|12h|1w|15d|1m|0.5y" description:"自动登录,12小时，1周，15天,1个月，半年"`
+	Provider        string `json:"provider" validate:"required" description:"SAML认证提供商"`
+	SamlResponse    string `json:"samlResponse" description:"SAML响应(Base64)"`
+	SamlResponseStd string `json:"SAMLResponse" description:"SAML响应(Base64)"`
+	RelayState      string `json:"relayState" description:"RelayState"`
+	RelayStateStd   string `json:"RelayState" description:"RelayState"`
+}
+
+func (md *LoginBySAML) GetSamlResponse() string {
+	if len(md.SamlResponse) > 0 {
+		return md.SamlResponse
+	}
+	return md.SamlResponseStd
+}
+
+func (md *LoginBySAML) GetRelayState() string {
+	if len(md.RelayState) > 0 {
+		return md.RelayState
+	}
+	return md.RelayStateStd
+}
+
 // OidcRequestToken oidc认证获取token请求结构
 type OidcRequestToken struct {
 	//客户端ID
@@ -417,6 +441,7 @@ type ExternalApp struct {
 // ThirdAuthMethod 支持的第三方登录方式
 type ThirdAuthMethod struct {
 	Oidcs           []OIDC `json:"oidcs" yaml:"oidcs" validate:"required" description:"OIDC登录"`
+	Samls           []SAML `json:"samls" yaml:"samls" description:"SAML登录"`
 	MFA             bool   `json:"mfa" yaml:"mfa" validate:"required" description:"多因素认证开启"`
 	FaceRecognition bool   `json:"faceRecognition" yaml:"faceRecognition" validate:"required" description:"人脸识别"`
 }
@@ -425,6 +450,15 @@ type OIDC struct {
 	Name string `json:"name" validate:"required" description:"名称"`
 	//认证地址
 	Address string `json:"address" validate:"required" description:"授权地址"`
+	//提供商类型
+	Category string `json:"category" validate:"required" description:"提供商类型"`
+}
+
+type SAML struct {
+	//名称
+	Name string `json:"name" validate:"required" description:"名称"`
+	//认证地址
+	Address string `json:"address" validate:"required" description:"认证地址"`
 	//提供商类型
 	Category string `json:"category" validate:"required" description:"提供商类型"`
 }

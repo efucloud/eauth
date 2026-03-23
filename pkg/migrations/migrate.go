@@ -18,6 +18,7 @@ func DatabaseMigrate() {
 		&daos.MultiFactorAuth{},
 		&daos.ProviderLdap{},
 		&daos.ProviderOidc{},
+		&daos.ProviderSaml{},
 		&daos.ValidateCode{},
 		&daos.User{},
 		&daos.UserAuthProfileTemp{},

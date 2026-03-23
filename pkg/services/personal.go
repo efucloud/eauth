@@ -19,7 +19,7 @@ func (svc *PersonalService) SetPassword(ctx context.Context, userId uint, model 
 	if len(model.OldPassword) > 0 {
 		user, _ := userSvc.GetUserByID(ctx, userId)
 		errorData.Err = common.ComparePassword(user.PasswordStore, model.OldPassword, config.PasswordSalt)
-		if errorData.IsNil() {
+		if errorData.IsNotNil() {
 			return errorData
 		}
 	}

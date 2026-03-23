@@ -72,6 +72,17 @@ func (r OAuthResource) AddWebService(ws *restful.WebService) {
 		Filter(filters.Log).Filter(filters.I18n).
 		Metadata(restfulspec.KeyOpenAPITags, apiInfo.Tags()).
 		Metadata(config.FrontApiTag, "systemLoginByOidc"))
+	ws.Route(ws.POST(config.V1Prefix+apiExtend+"/login/saml").
+		Doc("SAML方式登录").
+		Notes("SAML回调后前端给到后端的SAMLResponse接口，用于解析SAML断言并登录系统").
+		To(r.loginBySAML).
+		Reads(dtos.LoginBySAML{}).
+		Returns(http.StatusOK, "成功", dtos.AccessTokenResponse{}).
+		Returns(http.StatusBadRequest, "请求数据无法处理", dtos.ResponseError{}).
+		Returns(http.StatusInternalServerError, "内部处理逻辑错误", dtos.ResponseError{}).
+		Filter(filters.Log).Filter(filters.I18n).
+		Metadata(restfulspec.KeyOpenAPITags, apiInfo.Tags()).
+		Metadata(config.FrontApiTag, "systemLoginBySaml"))
 	ws.Route(ws.POST(config.V1Prefix+apiExtend+"/register/oidc").
 		Doc("OIDC认证新用户注册接口").
 		Notes("OIDC认证新用户注册接口，若系统用户注册且当前认证方式需在系统中创建新用户时").
@@ -553,6 +564,51 @@ func (r OAuthResource) loginByOIDC(req *restful.Request, resp *restful.Response)
 	}
 	common.ResponseSuccess(resp, result)
 }
+
+func (r OAuthResource) loginBySAML(req *restful.Request, resp *restful.Response) {
+	lang := common.GetLanguageFromReq(req, config.RequestLanguage)
+	var (
+		errorData  common.ErrorData
+		result     dtos.AccessTokenResponse
+		loginParam dtos.LoginBySAML
+	)
+
+	ctx := context.Background()
+	if reqCtx := req.Attribute(config.RequestContext); reqCtx != nil {
+		ctx = reqCtx.(context.Context)
+	}
+	ctx = context.WithValue(ctx, config.RequestLanguage, lang)
+
+	contentType := req.Request.Header.Get("Content-Type")
+	if strings.Contains(contentType, config.RequestForm) {
+		errorData.Err = req.Request.ParseForm()
+		if errorData.IsNil() {
+			loginParam.Provider = firstNotEmpty(req.Request.PostForm.Get("provider"), req.Request.Form.Get("provider"), req.QueryParameter("provider"))
+			loginParam.SamlResponse = firstNotEmpty(req.Request.PostForm.Get("samlResponse"), req.Request.PostForm.Get("SAMLResponse"), req.Request.Form.Get("samlResponse"), req.Request.Form.Get("SAMLResponse"))
+			loginParam.RelayState = firstNotEmpty(req.Request.PostForm.Get("relayState"), req.Request.PostForm.Get("RelayState"), req.Request.Form.Get("relayState"), req.Request.Form.Get("RelayState"))
+		}
+	} else {
+		errorData.Err = jsoniter.NewDecoder(req.Request.Body).Decode(&loginParam)
+	}
+	if errorData.IsNotNil() {
+		config.Logger.Error(errorData.Err)
+		errorData.MsgCode = config.MsgCodeJsonDecodeFailed
+		errorData.ResponseCode = http.StatusBadRequest
+		errorData.Lang = lang
+		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
+		return
+	}
+
+	result, errorData = r.Svc.LoginBySAML(ctx, loginParam)
+	if errorData.IsNotNil() {
+		config.Logger.Error(errorData.Err)
+		errorData.Lang = lang
+		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
+		return
+	}
+	common.ResponseSuccess(resp, result)
+}
+
 func (r OAuthResource) loginByLDAP(req *restful.Request, resp *restful.Response) {
 	lang := common.GetLanguageFromReq(req, config.RequestLanguage)
 	var (

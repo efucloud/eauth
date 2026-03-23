@@ -167,18 +167,10 @@ kind: Ingress
 apiVersion: networking.k8s.io/v1
 metadata:
   name: eauth-ingress-frontend
-  namespace: efucloud
-  annotations:
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   ingressClassName: nginx
-  tls:
-    - hosts:
-        - eauth.efucloud.com
-      secretName: eauth-tls
   rules:
-    - host: eauth.efucloud.com
+    - host: eauth-demo.efucloud.com
       http:
         paths:
           - path: /

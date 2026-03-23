@@ -1,11 +1,15 @@
 package services
 
 import (
+	"bytes"
+	"compress/flate"
 	"context"
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"github.com/efucloud/common"
@@ -649,11 +653,141 @@ func (svc *OAuthService) LoginByOIDC(ctx context.Context, loginParam dtos.LoginB
 	return svc.GenerateTokenResponse(ctx, true, config.ApplicationName, user)
 }
 
+func (svc *OAuthService) LoginBySAML(ctx context.Context, loginParam dtos.LoginBySAML) (response dtos.AccessTokenResponse, errorData common.ErrorData) {
+	var (
+		provider      dtos.ProviderSamlDetail
+		authedProfile dtos.UserAuthProfileDetail
+		user          dtos.UserDetail
+	)
+
+	if len(strings.TrimSpace(loginParam.Provider)) == 0 {
+		errorData.Err = fmt.Errorf("provider is required")
+		return
+	}
+	if len(strings.TrimSpace(loginParam.GetSamlResponse())) == 0 {
+		errorData.Err = fmt.Errorf("samlResponse is required")
+		return
+	}
+
+	providerSvc := ProviderSamlService{}
+	provider, errorData = providerSvc.GetProviderSamlByCategory(ctx, loginParam.Provider)
+	if errorData.IsNotNil() {
+		return
+	}
+	if !provider.Enable {
+		errorData.Err = fmt.Errorf("provider: %s is disabled, can't use it", provider.Name)
+		return
+	}
+
+	assertion, err := parseSAMLAssertion(loginParam.GetSamlResponse())
+	if err != nil {
+		errorData.Err = err
+		return
+	}
+
+	expectedIssuer := strings.TrimSpace(provider.EntityId)
+	if len(expectedIssuer) > 0 {
+		issuerMatched := strings.EqualFold(strings.TrimSpace(assertion.ResponseIssuer), expectedIssuer) || strings.EqualFold(strings.TrimSpace(assertion.AssertionIssuer), expectedIssuer)
+		if !issuerMatched {
+			errorData.Err = fmt.Errorf("saml issuer is not matched with provider entityId")
+			return
+		}
+	}
+	if !assertion.NotOnOrAfter.IsZero() && time.Now().After(assertion.NotOnOrAfter) {
+		errorData.Err = fmt.Errorf("saml assertion is expired")
+		return
+	}
+
+	loginID := selectSAMLAttribute(assertion.Attributes, provider.LoginIDAttr, "NameID", "nameid", "uid", "sub")
+	if len(loginID) == 0 {
+		loginID = strings.TrimSpace(assertion.NameID)
+	}
+	if len(loginID) == 0 {
+		errorData.Err = fmt.Errorf("saml response has no login id")
+		return
+	}
+	loginName := selectSAMLAttribute(assertion.Attributes, provider.LoginNameAttr, "name", "username", "displayName")
+	if len(loginName) == 0 {
+		loginName = loginID
+	}
+	nickname := selectSAMLAttribute(assertion.Attributes, provider.NicknameAttr, "nickname", "displayName")
+	if len(nickname) == 0 {
+		nickname = loginName
+	}
+	email := selectSAMLAttribute(assertion.Attributes, provider.EmailAttr, "email", "mail")
+	phone := selectSAMLAttribute(assertion.Attributes, provider.PhoneAttr, "phone_number", "phone", "mobile")
+	avatar := selectSAMLAttribute(assertion.Attributes, provider.AvatarAttr, "picture", "avatar")
+
+	properties := dtos.JsonMap{}
+	for key, value := range assertion.Attributes {
+		properties[key] = value
+	}
+	if len(assertion.NameID) > 0 {
+		properties["NameID"] = assertion.NameID
+	}
+	if len(assertion.ResponseIssuer) > 0 {
+		properties["responseIssuer"] = assertion.ResponseIssuer
+	}
+	if len(assertion.AssertionIssuer) > 0 {
+		properties["assertionIssuer"] = assertion.AssertionIssuer
+	}
+	if len(loginParam.GetRelayState()) > 0 {
+		properties["relayState"] = loginParam.GetRelayState()
+	}
+
+	profile := dtos.ThirdAuthProfile{
+		Provider:   provider.Category,
+		LoginID:    loginID,
+		Username:   loginName,
+		Nickname:   nickname,
+		Avatar:     avatar,
+		Properties: properties,
+	}
+	if len(email) > 0 {
+		profile.Properties["email"] = email
+	}
+	if len(phone) > 0 {
+		profile.Properties["phone"] = phone
+	}
+
+	authProfileSvc := UserAuthProfileService{}
+	authedProfile, errorData = authProfileSvc.GetUserAuthProfileByProviderAndId(ctx, profile.Provider, profile.LoginID)
+	if errorData.IsNotNil() {
+		return
+	}
+
+	userSvc := UserService{}
+	if authedProfile.ID == 0 {
+		errorData.Err = fmt.Errorf("saml user is not bound in eauth, provider: %s, loginId: %s", profile.Provider, profile.LoginID)
+		return
+	}
+	if !authedProfile.Enable {
+		errorData.Err = fmt.Errorf("forbiden authed by: %s", loginParam.Provider)
+		return
+	}
+
+	authedProfile.LoginName = profile.Username
+	authedProfile.Nickname = profile.Nickname
+	authedProfile.Avatar = profile.Avatar
+	authedProfile.Properties = profile.Properties
+	authedProfile.Enable = true
+	var updateModel dtos.UserAuthProfileUpdate
+	copyByJSON(authedProfile, &updateModel)
+	authProfileSvc.UpdateUserAuthProfile(ctx, updateModel)
+	user, errorData = userSvc.GetUserByID(ctx, authedProfile.UserId)
+	if errorData.IsNotNil() {
+		return
+	}
+
+	return svc.GenerateTokenResponse(ctx, true, config.ApplicationName, user)
+}
+
 func (svc *OAuthService) LoginByLDAP(ctx context.Context, loginParam dtos.LoginByLDAP) (response dtos.AccessTokenResponse, errorData common.ErrorData) {
 	return
 }
 func (svc *OAuthService) ThirdAuthMethods(ctx context.Context) (response dtos.ThirdAuthMethod) {
 	oidcSvc := ProviderOidcService{}
+	samlSvc := ProviderSamlService{}
 	response.MFA = config.ApplicationConfig.LoginConfig.MFA
 	response.FaceRecognition = config.ApplicationConfig.LoginConfig.FaceRecognition
 	result, _ := oidcSvc.ListProviderOidc(ctx, 0, 1000, "", "", nil)
@@ -706,5 +840,252 @@ func (svc *OAuthService) ThirdAuthMethods(ctx context.Context) (response dtos.Th
 
 		}
 	}
+	samlResults, _ := samlSvc.ListProviderSaml(ctx, 1, 1000, "", "", nil)
+	for _, item := range samlResults.Data {
+		if !item.Enable {
+			continue
+		}
+		address, err := buildSAMLAuthnRequestURL(*item)
+		if err != nil {
+			config.Logger.Warnf("build saml authn request failed for provider: %s, err: %s", item.Category, err.Error())
+			continue
+		}
+		response.Samls = append(response.Samls, dtos.SAML{
+			Name:     item.Name,
+			Address:  address,
+			Category: item.Category,
+		})
+	}
 	return
+}
+
+type samlParsedAssertion struct {
+	NameID          string
+	ResponseIssuer  string
+	AssertionIssuer string
+	Attributes      map[string]string
+	NotOnOrAfter    time.Time
+}
+
+type samlResponseEnvelope struct {
+	XMLName    xml.Name        `xml:"Response"`
+	Issuer     string          `xml:"Issuer"`
+	Assertions []samlAssertion `xml:"Assertion"`
+}
+
+type samlAssertion struct {
+	Issuer              string                   `xml:"Issuer"`
+	Subject             samlSubject              `xml:"Subject"`
+	Conditions          samlConditions           `xml:"Conditions"`
+	AttributeStatements []samlAttributeStatement `xml:"AttributeStatement"`
+}
+
+type samlSubject struct {
+	NameID               samlNameID                `xml:"NameID"`
+	SubjectConfirmations []samlSubjectConfirmation `xml:"SubjectConfirmation"`
+}
+
+type samlNameID struct {
+	Value string `xml:",chardata"`
+}
+
+type samlSubjectConfirmation struct {
+	SubjectConfirmationData samlSubjectConfirmationData `xml:"SubjectConfirmationData"`
+}
+
+type samlSubjectConfirmationData struct {
+	NotOnOrAfter string `xml:"NotOnOrAfter,attr"`
+}
+
+type samlConditions struct {
+	NotOnOrAfter string `xml:"NotOnOrAfter,attr"`
+}
+
+type samlAttributeStatement struct {
+	Attributes []samlAttribute `xml:"Attribute"`
+}
+
+type samlAttribute struct {
+	Name         string               `xml:"Name,attr"`
+	FriendlyName string               `xml:"FriendlyName,attr"`
+	Values       []samlAttributeValue `xml:"AttributeValue"`
+}
+
+type samlAttributeValue struct {
+	Value string `xml:",chardata"`
+}
+
+type samlAuthnRequest struct {
+	XMLName                     xml.Name          `xml:"samlp:AuthnRequest"`
+	XMLNSSAMLP                  string            `xml:"xmlns:samlp,attr"`
+	XMLNSSAML                   string            `xml:"xmlns:saml,attr"`
+	ID                          string            `xml:"ID,attr"`
+	Version                     string            `xml:"Version,attr"`
+	IssueInstant                string            `xml:"IssueInstant,attr"`
+	Destination                 string            `xml:"Destination,attr,omitempty"`
+	AssertionConsumerServiceURL string            `xml:"AssertionConsumerServiceURL,attr,omitempty"`
+	ProtocolBinding             string            `xml:"ProtocolBinding,attr,omitempty"`
+	Issuer                      samlAuthnIssuer   `xml:"saml:Issuer"`
+	NameIDPolicy                *samlNameIDPolicy `xml:"samlp:NameIDPolicy,omitempty"`
+}
+
+type samlAuthnIssuer struct {
+	Value string `xml:",chardata"`
+}
+
+type samlNameIDPolicy struct {
+	AllowCreate string `xml:"AllowCreate,attr,omitempty"`
+}
+
+func buildSAMLAuthnRequestURL(provider dtos.ProviderSamlDetail) (address string, err error) {
+	request := samlAuthnRequest{
+		XMLNSSAMLP:                  "urn:oasis:names:tc:SAML:2.0:protocol",
+		XMLNSSAML:                   "urn:oasis:names:tc:SAML:2.0:assertion",
+		ID:                          "_" + common.NewSecureID(16),
+		Version:                     "2.0",
+		IssueInstant:                time.Now().UTC().Format("2006-01-02T15:04:05Z"),
+		Destination:                 strings.TrimSpace(provider.SsoURL),
+		AssertionConsumerServiceURL: strings.TrimSpace(provider.AcsURL),
+		ProtocolBinding:             "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST",
+		Issuer: samlAuthnIssuer{
+			Value: strings.TrimSpace(provider.AcsURL),
+		},
+		NameIDPolicy: &samlNameIDPolicy{
+			AllowCreate: "true",
+		},
+	}
+	if len(strings.TrimSpace(provider.EntityId)) > 0 {
+		request.Issuer.Value = strings.TrimSpace(provider.EntityId)
+	}
+
+	rawXML, marshalErr := xml.Marshal(request)
+	if marshalErr != nil {
+		return "", marshalErr
+	}
+	var compressed bytes.Buffer
+	writer, writerErr := flate.NewWriter(&compressed, flate.DefaultCompression)
+	if writerErr != nil {
+		return "", writerErr
+	}
+	_, writeErr := writer.Write(rawXML)
+	if writeErr != nil {
+		_ = writer.Close()
+		return "", writeErr
+	}
+	if closeErr := writer.Close(); closeErr != nil {
+		return "", closeErr
+	}
+
+	params := url.Values{}
+	params.Set("SAMLRequest", base64.StdEncoding.EncodeToString(compressed.Bytes()))
+	params.Set("RelayState", common.NewSecureID(16))
+
+	if strings.Contains(provider.SsoURL, "?") {
+		return provider.SsoURL + "&" + params.Encode(), nil
+	}
+	return provider.SsoURL + "?" + params.Encode(), nil
+}
+
+func parseSAMLAssertion(encodedResponse string) (result samlParsedAssertion, err error) {
+	encodedResponse = strings.TrimSpace(encodedResponse)
+	if len(encodedResponse) == 0 {
+		err = fmt.Errorf("saml response is empty")
+		return
+	}
+	decoded, decodeErr := base64.StdEncoding.DecodeString(encodedResponse)
+	if decodeErr != nil {
+		err = fmt.Errorf("decode saml response failed: %w", decodeErr)
+		return
+	}
+	var envelope samlResponseEnvelope
+	if unmarshalErr := xml.Unmarshal(decoded, &envelope); unmarshalErr != nil {
+		err = fmt.Errorf("parse saml response xml failed: %w", unmarshalErr)
+		return
+	}
+	if len(envelope.Assertions) == 0 {
+		err = fmt.Errorf("saml response has no assertion")
+		return
+	}
+
+	assertion := envelope.Assertions[0]
+	result.ResponseIssuer = strings.TrimSpace(envelope.Issuer)
+	result.AssertionIssuer = strings.TrimSpace(assertion.Issuer)
+	result.NameID = strings.TrimSpace(assertion.Subject.NameID.Value)
+	result.Attributes = map[string]string{}
+	for _, statement := range assertion.AttributeStatements {
+		for _, attr := range statement.Attributes {
+			value := ""
+			for _, item := range attr.Values {
+				if len(strings.TrimSpace(item.Value)) > 0 {
+					value = strings.TrimSpace(item.Value)
+					break
+				}
+			}
+			if len(value) == 0 {
+				continue
+			}
+			name := strings.TrimSpace(attr.Name)
+			if len(name) > 0 {
+				result.Attributes[name] = value
+			}
+			friendlyName := strings.TrimSpace(attr.FriendlyName)
+			if len(friendlyName) > 0 {
+				result.Attributes[friendlyName] = value
+			}
+		}
+	}
+
+	result.NotOnOrAfter = parseSAMLTime(assertion.Conditions.NotOnOrAfter)
+	if result.NotOnOrAfter.IsZero() {
+		for _, item := range assertion.Subject.SubjectConfirmations {
+			result.NotOnOrAfter = parseSAMLTime(item.SubjectConfirmationData.NotOnOrAfter)
+			if !result.NotOnOrAfter.IsZero() {
+				break
+			}
+		}
+	}
+	return
+}
+
+func selectSAMLAttribute(attributes map[string]string, keys ...string) string {
+	for _, key := range keys {
+		key = strings.TrimSpace(key)
+		if len(key) == 0 {
+			continue
+		}
+		if strings.EqualFold(key, "nameid") {
+			if value, ok := attributes["NameID"]; ok && len(strings.TrimSpace(value)) > 0 {
+				return strings.TrimSpace(value)
+			}
+			continue
+		}
+		if value, ok := attributes[key]; ok && len(strings.TrimSpace(value)) > 0 {
+			return strings.TrimSpace(value)
+		}
+		for attrKey, attrValue := range attributes {
+			if strings.EqualFold(strings.TrimSpace(attrKey), key) && len(strings.TrimSpace(attrValue)) > 0 {
+				return strings.TrimSpace(attrValue)
+			}
+		}
+	}
+	return ""
+}
+
+func parseSAMLTime(value string) time.Time {
+	value = strings.TrimSpace(value)
+	if len(value) == 0 {
+		return time.Time{}
+	}
+	layouts := []string{
+		time.RFC3339Nano,
+		time.RFC3339,
+		"2006-01-02T15:04:05.999Z",
+		"2006-01-02T15:04:05Z",
+	}
+	for _, layout := range layouts {
+		if parsed, err := time.Parse(layout, value); err == nil {
+			return parsed
+		}
+	}
+	return time.Time{}
 }

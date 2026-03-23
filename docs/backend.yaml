@@ -30,7 +30,6 @@ stringData:
       smtpPort: 465
       username: "noreply@example.com"
       password: "CHANGE_ME"
-    
     logConfig:
       production: true
       filename: ""
@@ -59,7 +58,7 @@ spec:
     spec:
       containers:
       - name: eauth
-        image: registry.cn-shenzhen.aliyuncs.com/efucloud-public/eauth:v1.0.0.202603161846
+        image: registry.cn-shenzhen.aliyuncs.com/efucloud-public/eauth:v1.0.0.202603231755
         imagePullPolicy: IfNotPresent
         ports:
         - name: http
