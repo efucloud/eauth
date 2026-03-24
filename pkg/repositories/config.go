@@ -42,7 +42,7 @@ func (repo *ConfigRepository) GetConfigByID(ctx context.Context, id string) (res
 	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
-		errorData.Err = fmt.Errorf("not found system config by id: %d", id)
+		errorData.Err = fmt.Errorf("not found system config by id: %s", id)
 		config.Logger.Error(errorData.Err)
 	}
 	return

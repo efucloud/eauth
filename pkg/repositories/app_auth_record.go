@@ -45,7 +45,7 @@ func (repo *AppAuthRecordRepository) GetAppAuthRecordById(ctx context.Context, i
 	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
-		errorData.Err = fmt.Errorf("not found application by id: %d", id)
+		errorData.Err = fmt.Errorf("not found application by id: %s", id)
 		config.Logger.Error(errorData.Err)
 	}
 	return

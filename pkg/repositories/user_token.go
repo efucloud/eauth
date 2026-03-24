@@ -37,7 +37,7 @@ func (repo *UserTokenRepository) GetUserTokenDetailById(ctx context.Context, id 
 	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
-		errorData.Err = fmt.Errorf("not found application by id: %d", id)
+		errorData.Err = fmt.Errorf("not found application by id: %s", id)
 		config.Logger.Error(errorData.Err)
 	}
 	return
@@ -63,7 +63,7 @@ func (repo *UserTokenRepository) GetUserTokenByID(ctx context.Context, id string
 	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
-		errorData.Err = fmt.Errorf("not found record by id: %d", id)
+		errorData.Err = fmt.Errorf("not found record by id: %s", id)
 		config.Logger.Error(errorData.Err)
 	}
 	return

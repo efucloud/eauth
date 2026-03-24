@@ -140,7 +140,7 @@ func (repo *UserRepository) GetUserByID(ctx context.Context, id string) (result 
 	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
-		errorData.Err = fmt.Errorf("not found  user by id: %d", id)
+		errorData.Err = fmt.Errorf("not found  user by id: %s", id)
 		config.Logger.Error(errorData.Err)
 	}
 	return

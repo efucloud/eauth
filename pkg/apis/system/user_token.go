@@ -59,7 +59,7 @@ func (r UserTokenResource) AddWebService(ws *restful.WebService) {
 		Notes("获取系统用户令牌信息详情").
 		Param(ws.HeaderParameter(config.AuthHeader, "系统用户Token")).
 		To(r.get).
-		Param(ws.PathParameter("id", "记录ID").DataType("number")).
+		Param(ws.PathParameter("id", "记录ID").DataType("string")).
 		Returns(http.StatusOK, "成功", dtos.UserTokenDetail{}).
 		Returns(http.StatusBadRequest, "请求数据无法处理", dtos.ResponseError{}).
 		Returns(http.StatusForbidden, "用户没有权限", dtos.ResponseError{}).
