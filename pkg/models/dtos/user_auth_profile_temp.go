@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/efucloud/common"
+	"github.com/efucloud/eauth/pkg/utils"
 	"github.com/go-playground/validator/v10"
 	"strings"
 	"time"
@@ -20,7 +21,7 @@ type UserAuthProfileTempDetailList struct {
 // UserAuthProfileTempDetail 系统用户认证方式详情
 type UserAuthProfileTempDetail struct {
 	//主键
-	ID uint `gorm:"primarykey;column:id" json:"id" description:"记录ID"`
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"id" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"createdAt" description:"创建时间"`
 	//请求码
@@ -43,6 +44,7 @@ type UserAuthProfileTempDetail struct {
 
 // UserAuthProfileTempCreate 系统用户认证方式创建
 type UserAuthProfileTempCreate struct {
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"-" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"createdAt" description:"创建时间"`
 	//请求码
@@ -64,7 +66,8 @@ type UserAuthProfileTempCreate struct {
 }
 
 func (ins *UserAuthProfileTempCreate) Default(ctx context.Context) {
-
+	ins.ID = utils.GenerateDatabaseId()
+	ins.CreatedAt = time.Now()
 }
 func (ins *UserAuthProfileTempCreate) Validate(ctx context.Context) (err error) {
 	validate := validator.New()

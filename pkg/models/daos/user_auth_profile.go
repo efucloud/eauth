@@ -10,7 +10,7 @@ import (
 // 允许用户自己删除 若删除后，再次认证需要重新走所有的流程
 type UserAuthProfile struct {
 	//主键
-	ID uint `gorm:"primarykey;column:id" json:"id" description:"记录ID"`
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"id" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"createdAt" description:"创建时间"`
 	//创建时间

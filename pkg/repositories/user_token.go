@@ -27,14 +27,14 @@ func (repo *UserTokenRepository) GetUserTokensByreRefreshToken(ctx context.Conte
 	}
 	return
 }
-func (repo *UserTokenRepository) GetUserTokenDetailById(ctx context.Context, id uint) (result dtos.UserTokenDetail, errorData common.ErrorData) {
+func (repo *UserTokenRepository) GetUserTokenDetailById(ctx context.Context, id string) (result dtos.UserTokenDetail, errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.UserTokenTableName).Where("id = ?", id).Find(&result).Error
 	if errorData.IsNotNil() {
 		errorData = daos.ParserDatabaseError(ctx, errorData)
 		config.Logger.Error(errorData.Err)
 		errorData.ResponseCode = http.StatusInternalServerError
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
-	} else if result.ID == 0 {
+	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
 		errorData.Err = fmt.Errorf("not found application by id: %d", id)
@@ -42,7 +42,7 @@ func (repo *UserTokenRepository) GetUserTokenDetailById(ctx context.Context, id 
 	}
 	return
 }
-func (repo *UserTokenRepository) GetUserTokensByUserId(ctx context.Context, userId uint) (results dtos.UserTokenDetailList, errorData common.ErrorData) {
+func (repo *UserTokenRepository) GetUserTokensByUserId(ctx context.Context, userId string) (results dtos.UserTokenDetailList, errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.UserTokenTableName).Where("user_id = ?", userId).Find(&results.Data).Error
 	if errorData.IsNotNil() {
 		errorData = daos.ParserDatabaseError(ctx, errorData)
@@ -53,14 +53,14 @@ func (repo *UserTokenRepository) GetUserTokensByUserId(ctx context.Context, user
 	results.Total = int64(len(results.Data))
 	return
 }
-func (repo *UserTokenRepository) GetUserTokenByID(ctx context.Context, id uint) (result dtos.UserTokenDetail, errorData common.ErrorData) {
+func (repo *UserTokenRepository) GetUserTokenByID(ctx context.Context, id string) (result dtos.UserTokenDetail, errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.UserTokenTableName).Where("id = ?", id).Find(&result).Error
 	if errorData.IsNotNil() {
 		errorData = daos.ParserDatabaseError(ctx, errorData)
 		config.Logger.Error(errorData.Err)
 		errorData.ResponseCode = http.StatusInternalServerError
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
-	} else if result.ID == 0 {
+	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
 		errorData.Err = fmt.Errorf("not found record by id: %d", id)
@@ -98,7 +98,7 @@ func (repo *UserTokenRepository) AddUserToken(ctx context.Context, model dtos.Us
 	return result, errorData
 }
 
-func (repo *UserTokenRepository) DeleteUserToken(ctx context.Context, ids []uint) (errorData common.ErrorData) {
+func (repo *UserTokenRepository) DeleteUserToken(ctx context.Context, ids []string) (errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.UserTokenTableName).Where("id IN (?)", ids).Delete(nil).Error
 	if errorData.IsNotNil() {
 		errorData = daos.ParserDatabaseError(ctx, errorData)

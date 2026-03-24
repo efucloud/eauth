@@ -30,13 +30,13 @@ func (svc *UserTokenService) GetUserTokensByreRefreshToken(ctx context.Context, 
 	}
 	return results, errorData
 }
-func (svc *UserTokenService) GetUserTokensByUserId(ctx context.Context, userId uint) (results dtos.UserTokenDetailList, errorData common.ErrorData) {
+func (svc *UserTokenService) GetUserTokensByUserId(ctx context.Context, userId string) (results dtos.UserTokenDetailList, errorData common.ErrorData) {
 	svc.init(ctx)
 	userSvc := UserService{}
 	user, _ := userSvc.GetShortUserByID(ctx, userId)
 	results, errorData = svc.repo.GetUserTokensByUserId(ctx, userId)
 	if errorData.IsNotNil() {
-		config.Logger.Errorf("getUserAuthProfile by user id: %d failed, err: %s", userId, errorData.Err.Error())
+		config.Logger.Errorf("getUserAuthProfile by user id: %s failed, err: %s", userId, errorData.Err.Error())
 	}
 	for i, _ := range results.Data {
 		results.Data[i].User = user
@@ -44,11 +44,11 @@ func (svc *UserTokenService) GetUserTokensByUserId(ctx context.Context, userId u
 	return results, errorData
 }
 
-func (svc *UserTokenService) GetUserTokenDetailById(ctx context.Context, id uint) (result dtos.UserTokenDetail, errorData common.ErrorData) {
+func (svc *UserTokenService) GetUserTokenDetailById(ctx context.Context, id string) (result dtos.UserTokenDetail, errorData common.ErrorData) {
 	svc.init(ctx)
 	result, errorData = svc.repo.GetUserTokenDetailById(ctx, id)
 	if errorData.IsNotNil() {
-		config.Logger.Errorf("getUserTokenDetail by id: %d failed, err: %s", id, errorData.Err.Error())
+		config.Logger.Errorf("getUserTokenDetail by id: %s failed, err: %s", id, errorData.Err.Error())
 	}
 	return result, errorData
 }
@@ -67,12 +67,12 @@ func (svc *UserTokenService) UpdateUserToken(ctx context.Context, model dtos.Use
 	errorData.Err = model.Validate(ctx)
 	if errorData.IsNotNil() {
 		errorData.MsgCode = config.MsgCodeRequestDataInvalid
-		config.Logger.Errorf("updateUserToken: %d failed, err: %s", model.UserId, errorData.Err.Error())
+		config.Logger.Errorf("updateUserToken: %s failed, err: %s", model.UserId, errorData.Err.Error())
 		return
 	}
 	result, errorData = svc.repo.UpdateUserToken(ctx, model)
 	if errorData.IsNotNil() {
-		config.Logger.Errorf("updateUserToken: %d failed, err: %s", model.UserId, errorData.Err.Error())
+		config.Logger.Errorf("updateUserToken: %s failed, err: %s", model.UserId, errorData.Err.Error())
 
 	}
 	return
@@ -83,17 +83,17 @@ func (svc *UserTokenService) AddUserToken(ctx context.Context, model dtos.UserTo
 	errorData.Err = model.Validate(ctx)
 	if errorData.IsNotNil() {
 		errorData.MsgCode = config.MsgCodeRequestDataInvalid
-		config.Logger.Errorf("createUserToken: %d failed, err: %s", model.UserId, errorData.Err.Error())
+		config.Logger.Errorf("createUserToken: %s failed, err: %s", model.UserId, errorData.Err.Error())
 		return
 	}
 	result, errorData = svc.repo.AddUserToken(ctx, model)
 	if errorData.IsNotNil() {
-		config.Logger.Errorf("createUserToken: %d failed, err: %s", model.UserId, errorData.Err.Error())
+		config.Logger.Errorf("createUserToken: %s failed, err: %s", model.UserId, errorData.Err.Error())
 	}
 	return
 }
 
-func (svc *UserTokenService) DeleteUserToken(ctx context.Context, ids []uint) (errorData common.ErrorData) {
+func (svc *UserTokenService) DeleteUserToken(ctx context.Context, ids []string) (errorData common.ErrorData) {
 	svc.init(ctx)
 	errorData = svc.repo.DeleteUserToken(ctx, ids)
 	if errorData.IsNotNil() {

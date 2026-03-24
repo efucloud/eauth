@@ -35,12 +35,12 @@ func (svc *ConfigService) GetConfigByCode(ctx context.Context, code string) (res
 	return result, errorData
 }
 
-func (svc *ConfigService) GetConfigByID(ctx context.Context, id uint) (result dtos.ConfigDetail, errorData common.ErrorData) {
+func (svc *ConfigService) GetConfigByID(ctx context.Context, id string) (result dtos.ConfigDetail, errorData common.ErrorData) {
 	svc.init(ctx)
 
 	result, errorData = svc.repo.GetConfigByID(ctx, id)
 	if errorData.IsNotNil() {
-		config.Logger.Errorf("getConfig by id: %d failed, err: %s", id, errorData.Err.Error())
+		config.Logger.Errorf("getConfig by id: %s failed, err: %s", id, errorData.Err.Error())
 	}
 	return result, errorData
 }
@@ -84,11 +84,11 @@ func (svc *ConfigService) AddConfig(ctx context.Context, model dtos.ConfigCreate
 	return
 }
 
-func (svc *ConfigService) DeleteConfig(ctx context.Context, id uint) (errorData common.ErrorData) {
+func (svc *ConfigService) DeleteConfig(ctx context.Context, id string) (errorData common.ErrorData) {
 	svc.init(ctx)
 	errorData = svc.repo.DeleteConfig(ctx, id)
 	if errorData.IsNotNil() {
-		config.Logger.Errorf("deleteConfig by id: %d failed, err: %s", id, errorData.Err.Error())
+		config.Logger.Errorf("deleteConfig by id: %s failed, err: %s", id, errorData.Err.Error())
 	}
 	return
 }

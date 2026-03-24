@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/efucloud/common"
+	"github.com/efucloud/eauth/pkg/utils"
 	"github.com/go-playground/validator/v10"
 	"strings"
 	"time"
@@ -20,13 +21,13 @@ type MultiFactorAuthDetailList struct {
 // MultiFactorAuthDetail 用户MFA信息详情
 type MultiFactorAuthDetail struct {
 	//主键
-	ID uint `gorm:"primarykey;column:id" json:"id" description:"记录ID"`
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"id" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"createdAt" description:"创建时间"`
 	//创建时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"updatedAt,omitempty" description:"更新时间"`
 	//所属用户
-	UserId uint `gorm:"user_id" json:"userId" validate:"required" description:"所属用户"`
+	UserId string `gorm:"user_id" json:"userId" validate:"required" description:"所属用户"`
 	//密钥
 	Secret string `gorm:"type:varchar(50);column:secret" json:"secret" validate:"required" description:"密钥"`
 	//二维码
@@ -37,10 +38,11 @@ type MultiFactorAuthDetail struct {
 
 // MultiFactorAuthCreate 用户MFA信息创建
 type MultiFactorAuthCreate struct {
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"-" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"-" description:"创建时间"`
 	//所属用户
-	UserId uint `gorm:"user_id" json:"userId" validate:"required" description:"所属用户"`
+	UserId string `gorm:"user_id" json:"userId" validate:"required" description:"所属用户"`
 	//密钥
 	Secret string `gorm:"type:varchar(50);column:secret" json:"secret" validate:"required" description:"密钥"`
 	//二维码
@@ -51,6 +53,8 @@ type MultiFactorAuthCreate struct {
 
 func (ins *MultiFactorAuthCreate) Default(ctx context.Context) {
 	ins.Status = "unbound"
+	ins.CreatedAt = time.Now()
+	ins.ID = utils.GenerateDatabaseId()
 }
 func (ins *MultiFactorAuthCreate) Validate(ctx context.Context) (err error) {
 	validate := validator.New()
@@ -76,7 +80,7 @@ func (ins *MultiFactorAuthCreate) Validate(ctx context.Context) (err error) {
 // MultiFactorAuthStatus 禁用后，用户将不能使用该认证方式登陆系统
 type MultiFactorAuthStatus struct {
 	//主键
-	Id uint ` json:"id" description:"主键"`
+	Id string ` json:"id" description:"主键"`
 	//更新时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"-" description:"更新时间"`
 	//状态：是否已绑定

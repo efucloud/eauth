@@ -121,15 +121,8 @@ func (r UserAuthProfileResource) userProfiles(req *restful.Request, resp *restfu
 		ctx = reqCtx.(context.Context)
 	}
 	ctx = context.WithValue(ctx, config.RequestLanguage, lang)
-	userId := common.StringsToUint(req.PathParameter("userId"))
-	if userId < 1 {
-		errorData.MsgCode = config.MsgCodePathIdInvalid
-		errorData.ResponseCode = http.StatusBadRequest
-		errorData.Lang = lang
-		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
-		return
-	}
-	result, errorData = r.Svc.GetUserAuthProfilesByUserId(ctx, userId)
+
+	result, errorData = r.Svc.GetUserAuthProfilesByUserId(ctx, req.PathParameter("userId"))
 	if errorData.IsNotNil() {
 		config.Logger.Errorf("get personal auth profile failed, err: %s", errorData.Err.Error())
 		errorData.Lang = lang
@@ -157,7 +150,7 @@ func (r UserAuthProfileResource) personal(req *restful.Request, resp *restful.Re
 		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
 		return
 	}
-	result, errorData = r.Svc.GetUserAuthProfilesByUserId(ctx, userId.(uint))
+	result, errorData = r.Svc.GetUserAuthProfilesByUserId(ctx, userId.(string))
 	if errorData.IsNotNil() {
 		config.Logger.Errorf("get personal auth profile failed, err: %s", errorData.Err.Error())
 		errorData.Lang = lang
@@ -213,17 +206,9 @@ func (r UserAuthProfileResource) get(req *restful.Request, resp *restful.Respons
 	}
 	ctx = context.WithValue(ctx, config.RequestLanguage, lang)
 
-	id := common.StringsToUint(req.PathParameter("id"))
-	if id < 1 {
-		errorData.MsgCode = config.MsgCodePathIdInvalid
-		errorData.ResponseCode = http.StatusBadRequest
-		errorData.Lang = lang
-		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
-		return
-	}
-	result, errorData = r.Svc.GetUserAuthProfileByID(ctx, id)
+	result, errorData = r.Svc.GetUserAuthProfileByID(ctx, req.PathParameter("id"))
 	if !errorData.IsNil() {
-		config.Logger.Errorf("get oidc proivder by id: %d failed, err: %s", id, errorData.Err.Error())
+		config.Logger.Errorf("get oidc proivder by id: %s failed, err: %s", req.PathParameter("id"), errorData.Err.Error())
 		errorData.Lang = lang
 		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
 		return

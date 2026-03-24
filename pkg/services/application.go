@@ -30,11 +30,11 @@ func (svc *ApplicationService) ChangeStatus(ctx context.Context, model dtos.Appl
 	errorData = svc.repo.ChangeStatus(ctx, model)
 	return
 }
-func (svc *ApplicationService) GetApplicationById(ctx context.Context, id uint) (result dtos.ApplicationDetail, errorData common.ErrorData) {
+func (svc *ApplicationService) GetApplicationById(ctx context.Context, id string) (result dtos.ApplicationDetail, errorData common.ErrorData) {
 	svc.init(ctx)
 	result, errorData = svc.repo.GetApplicationById(ctx, id)
 	if errorData.IsNotNil() {
-		config.Logger.Errorf("get Application by id: %d failed, err: %s", id, errorData.Err.Error())
+		config.Logger.Errorf("get Application by id: %s failed, err: %s", id, errorData.Err.Error())
 	}
 
 	return result, errorData
@@ -101,7 +101,7 @@ func (svc *ApplicationService) AddApplication(ctx context.Context, model dtos.Ap
 	return
 }
 
-func (svc *ApplicationService) DeleteApplication(ctx context.Context, ids []uint) (errorData common.ErrorData) {
+func (svc *ApplicationService) DeleteApplication(ctx context.Context, ids []string) (errorData common.ErrorData) {
 	svc.init(ctx)
 	errorData = svc.repo.DeleteApplication(ctx, ids)
 	if errorData.IsNotNil() {

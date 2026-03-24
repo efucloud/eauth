@@ -30,7 +30,7 @@ import (
 type OAuthService struct {
 }
 
-func (svc *OAuthService) ApplicationAuthCode(ctx context.Context, userId uint, model dtos.OidcCodeRequest) (result dtos.OidcCodeResponse, errorData common.ErrorData) {
+func (svc *OAuthService) ApplicationAuthCode(ctx context.Context, userId string, model dtos.OidcCodeRequest) (result dtos.OidcCodeResponse, errorData common.ErrorData) {
 	var (
 		user                          dtos.UserDetail
 		app                           dtos.ApplicationDetail
@@ -77,7 +77,7 @@ func (svc *OAuthService) ApplicationAuthCode(ctx context.Context, userId uint, m
 
 	return
 }
-func (svc *OAuthService) UpdateUserAvatar(ctx context.Context, userId uint, avatarAddress string) (errorData common.ErrorData) {
+func (svc *OAuthService) UpdateUserAvatar(ctx context.Context, userId string, avatarAddress string) (errorData common.ErrorData) {
 	userSvc := UserService{}
 	return userSvc.UpdateUserAvatar(ctx, userId, avatarAddress)
 }
@@ -89,7 +89,7 @@ func (svc *OAuthService) ChangeSelfInformation(ctx context.Context, model dtos.U
 	errorData.Err = model.Validate(ctx)
 	if errorData.IsNotNil() {
 		errorData.MsgCode = config.MsgCodeRequestDataInvalid
-		config.Logger.Errorf("user: %d update failed, err: %s", model.ID, errorData.Err.Error())
+		config.Logger.Errorf("user: %s update failed, err: %s", model.ID, errorData.Err.Error())
 		return
 	}
 	userSvc := UserService{}
@@ -102,7 +102,7 @@ func (svc *OAuthService) ChangeSelfInformation(ctx context.Context, model dtos.U
 	userinfo.HasPassword = len(user.PasswordStore) > 0
 	return userinfo, errorData
 }
-func (svc *OAuthService) Userinfo(ctx context.Context, userId uint) (userinfo dtos.AuthedUserInfo, errorData common.ErrorData) {
+func (svc *OAuthService) Userinfo(ctx context.Context, userId string) (userinfo dtos.AuthedUserInfo, errorData common.ErrorData) {
 
 	var (
 		user dtos.UserDetail
@@ -110,11 +110,11 @@ func (svc *OAuthService) Userinfo(ctx context.Context, userId uint) (userinfo dt
 	userSvc := UserService{}
 	user, errorData = userSvc.GetUserByID(ctx, userId)
 	if errorData.IsNotNil() {
-		config.Logger.Errorf("can't get user by id: %d, err: %s", userId, errorData.Err.Error())
+		config.Logger.Errorf("can't get user by id: %s, err: %s", userId, errorData.Err.Error())
 		return userinfo, errorData
 	}
 	if !user.Enable {
-		config.Logger.Errorf("can't get user by id: %d, user id disabled", userId)
+		config.Logger.Errorf("can't get user by id: %s, user id disabled", userId)
 		return userinfo, errorData
 	}
 	copyByJSON(user, &userinfo)
@@ -255,7 +255,7 @@ func (svc *OAuthService) RefreshToken(ctx context.Context, req *restful.Request,
 	refreshToken, _ := req.BodyParameter("refresh_token")
 	tokenSvc := UserTokenService{}
 	t, _ := tokenSvc.GetUserTokensByreRefreshToken(ctx, refreshToken)
-	if t.ID > 0 {
+	if len(t.ID) > 0 {
 		userSvc := UserService{}
 		short, _ := userSvc.GetUserByID(ctx, t.UserId)
 		token, errorData = svc.GenerateTokenResponse(ctx, false, t.ClientId, short)
@@ -284,7 +284,7 @@ func (svc *OAuthService) GenerateTokenResponse(ctx context.Context, needMfa bool
 			mfa dtos.MultiFactorAuthDetail
 		)
 		mfa = mfaSvc.GetUserMultiFactorAuthByUserId(ctx, user.ID)
-		if mfa.ID == 0 {
+		if len(mfa.ID) == 0 {
 			mfa, _ = mfaSvc.AddMultiFactorAuth(ctx, user.ID)
 		}
 		response.Mfa = true
@@ -478,7 +478,7 @@ func (svc *OAuthService) MfaValidate(ctx context.Context, model dtos.MfaCode) (r
 			status.UpdatedAt = time.Now()
 			status.Status = "bound"
 			go mfaSvc.ChangeStatus(ctx, model.UserId, status)
-			go userSvc.UpdateUserMFa(ctx, []uint{model.UserId}, true)
+			go userSvc.UpdateUserMFa(ctx, []string{model.UserId}, true)
 		}
 		return svc.GenerateTokenResponse(ctx, false, config.ApplicationName, user)
 	}
@@ -630,7 +630,7 @@ func (svc *OAuthService) LoginByOIDC(ctx context.Context, loginParam dtos.LoginB
 	userSvc := UserService{}
 
 	//判断是否存在以及是否允许自注册
-	if authedProfile.ID > 0 {
+	if len(authedProfile.ID) > 0 {
 		if !authedProfile.Enable {
 			errorData.Err = fmt.Errorf("forbiden authed by: %s", loginParam.Provider)
 			return
@@ -757,7 +757,7 @@ func (svc *OAuthService) LoginBySAML(ctx context.Context, loginParam dtos.LoginB
 	}
 
 	userSvc := UserService{}
-	if authedProfile.ID == 0 {
+	if len(authedProfile.ID) == 0 {
 		errorData.Err = fmt.Errorf("saml user is not bound in eauth, provider: %s, loginId: %s", profile.Provider, profile.LoginID)
 		return
 	}

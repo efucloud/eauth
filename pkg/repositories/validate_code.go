@@ -24,7 +24,7 @@ func (repo *ValidateCodeRepository) GetValidateCodeByCode(ctx context.Context, c
 		config.Logger.Error(errorData.Err)
 		errorData.ResponseCode = http.StatusInternalServerError
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
-	} else if result.ID == 0 {
+	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
 		errorData.Err = fmt.Errorf("not foundValidateCode by code: %s", code)

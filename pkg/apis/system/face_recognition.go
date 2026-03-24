@@ -271,7 +271,7 @@ func (r FaceRecognitionResource) create(req *restful.Request, resp *restful.Resp
 		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
 		return
 	}
-	model.UserId = userId.(uint)
+	model.UserId = userId.(string)
 	result, errorData = r.Svc.AddFaceRecognition(ctx, model)
 	if errorData.IsNotNil() {
 		config.Logger.Errorf("add account failed, err: %s", errorData.Err.Error())
@@ -301,7 +301,7 @@ func (r FaceRecognitionResource) faceRecognitionPersonal(req *restful.Request, r
 		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
 		return
 	}
-	result, errorData = r.Svc.GetUserPersonalFaceRecognitions(ctx, userId.(uint))
+	result, errorData = r.Svc.GetUserPersonalFaceRecognitions(ctx, userId.(string))
 	if errorData.IsNotNil() {
 		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
 		return

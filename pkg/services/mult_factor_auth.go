@@ -30,28 +30,28 @@ func (svc *MultiFactorAuthService) init(ctx context.Context) {
 	}
 }
 
-func (svc *MultiFactorAuthService) ChangeStatus(ctx context.Context, userId uint, model dtos.MultiFactorAuthStatus) (errorData common.ErrorData) {
+func (svc *MultiFactorAuthService) ChangeStatus(ctx context.Context, userId string, model dtos.MultiFactorAuthStatus) (errorData common.ErrorData) {
 	svc.init(ctx)
 	model.Default(ctx)
 	errorData.Err = model.Validate(ctx)
 	if errorData.IsNotNil() {
 		errorData.MsgCode = config.MsgCodeRequestDataInvalid
-		config.Logger.Errorf("MultiFactorAuth: %d create failed, err: %s", model.Id, errorData.Err.Error())
+		config.Logger.Errorf("MultiFactorAuth: %s create failed, err: %s", model.Id, errorData.Err.Error())
 		return
 	}
 	errorData = svc.repo.ChangeStatus(ctx, userId, model)
 	return
 }
 
-func (svc *MultiFactorAuthService) GetUserMultiFactorAuthByUserId(ctx context.Context, userId uint) (results dtos.MultiFactorAuthDetail) {
+func (svc *MultiFactorAuthService) GetUserMultiFactorAuthByUserId(ctx context.Context, userId string) (results dtos.MultiFactorAuthDetail) {
 	svc.init(ctx)
 	return svc.repo.GetUserMultiFactorAuth(ctx, userId)
 }
-func (svc *MultiFactorAuthService) GetMultiFactorAuthById(ctx context.Context, id uint) (result dtos.MultiFactorAuthDetail, errorData common.ErrorData) {
+func (svc *MultiFactorAuthService) GetMultiFactorAuthById(ctx context.Context, id string) (result dtos.MultiFactorAuthDetail, errorData common.ErrorData) {
 	svc.init(ctx)
 	result, errorData = svc.repo.GetMultiFactorAuthById(ctx, id)
 	if errorData.IsNotNil() {
-		config.Logger.Errorf("getMultiFactorAuth by id: %d failed, err: %s", id, errorData.Err.Error())
+		config.Logger.Errorf("getMultiFactorAuth by id: %s failed, err: %s", id, errorData.Err.Error())
 	}
 
 	return result, errorData
@@ -69,9 +69,9 @@ func (svc *MultiFactorAuthService) ListMultiFactorAuth(ctx context.Context, curr
 	}
 	return results, errorData
 }
-func (svc *MultiFactorAuthService) BoundUserMultiFactorAuth(ctx context.Context, userId uint, code string) (model dtos.MultiFactorAuthDetail) {
+func (svc *MultiFactorAuthService) BoundUserMultiFactorAuth(ctx context.Context, userId, code string) (model dtos.MultiFactorAuthDetail) {
 	model = svc.GetUserMultiFactorAuthByUserId(ctx, userId)
-	if model.ID == 0 {
+	if len(model.ID) == 0 {
 		return
 	}
 	if totp.Validate(code, model.Secret) {
@@ -82,24 +82,24 @@ func (svc *MultiFactorAuthService) BoundUserMultiFactorAuth(ctx context.Context,
 			status.Status = "bound"
 			svc.ChangeStatus(ctx, model.UserId, status)
 			userSvc := UserService{}
-			userSvc.UpdateUserMFa(ctx, []uint{model.UserId}, true)
+			userSvc.UpdateUserMFa(ctx, []string{model.UserId}, true)
 		}
 	}
 	return svc.GetUserMultiFactorAuthByUserId(ctx, userId)
 
 }
-func (svc *MultiFactorAuthService) ResetUserMultiFactorAuth(ctx context.Context, userId uint, code string) (result dtos.MultiFactorAuthDetail, errorData common.ErrorData) {
+func (svc *MultiFactorAuthService) ResetUserMultiFactorAuth(ctx context.Context, userId, code string) (result dtos.MultiFactorAuthDetail, errorData common.ErrorData) {
 	old := svc.GetUserMultiFactorAuthByUserId(ctx, userId)
 	if totp.Validate(code, old.Secret) {
-		svc.DeleteMultiFactorAuth(ctx, []uint{old.ID})
+		svc.DeleteMultiFactorAuth(ctx, []string{old.ID})
 		userSvc := UserService{}
-		userSvc.UpdateUserMFa(ctx, []uint{userId}, false)
+		userSvc.UpdateUserMFa(ctx, []string{userId}, false)
 		return svc.AddMultiFactorAuth(ctx, userId)
 	}
 	errorData.Err = fmt.Errorf(" MFA code is invalid")
 	return
 }
-func (svc *MultiFactorAuthService) AddMultiFactorAuth(ctx context.Context, userId uint) (result dtos.MultiFactorAuthDetail, errorData common.ErrorData) {
+func (svc *MultiFactorAuthService) AddMultiFactorAuth(ctx context.Context, userId string) (result dtos.MultiFactorAuthDetail, errorData common.ErrorData) {
 	svc.init(ctx)
 	var (
 		key       *otp.Key
@@ -118,16 +118,16 @@ func (svc *MultiFactorAuthService) AddMultiFactorAuth(ctx context.Context, userI
 	mfaCreate.Image = "data:image/png;base64," + base64.StdEncoding.EncodeToString(buf.Bytes())
 	result, errorData = svc.repo.AddMultiFactorAuth(ctx, mfaCreate)
 	if errorData.IsNotNil() {
-		config.Logger.Errorf("MultiFactorAuth for user: %d create failed, err: %s", userId, errorData.Err.Error())
+		config.Logger.Errorf("MultiFactorAuth for user: %s create failed, err: %s", userId, errorData.Err.Error())
 	}
 
 	return
 }
-func (svc *MultiFactorAuthService) DeleteMultiFactorAuthByUserIds(ctx context.Context, userIds []uint) (errorData common.ErrorData) {
+func (svc *MultiFactorAuthService) DeleteMultiFactorAuthByUserIds(ctx context.Context, userIds []string) (errorData common.ErrorData) {
 	svc.init(ctx)
 	return svc.repo.DeleteMultiFactorAuthByUserIds(ctx, userIds)
 }
-func (svc *MultiFactorAuthService) DeleteMultiFactorAuth(ctx context.Context, ids []uint) (errorData common.ErrorData) {
+func (svc *MultiFactorAuthService) DeleteMultiFactorAuth(ctx context.Context, ids []string) (errorData common.ErrorData) {
 	tx := config.DBConnect.Begin()
 	defer func() {
 		if errorData.IsNotNil() {
@@ -138,7 +138,7 @@ func (svc *MultiFactorAuthService) DeleteMultiFactorAuth(ctx context.Context, id
 	}()
 	svc.init(ctx)
 	records, _ := svc.ListMultiFactorAuth(ctx, 1, 1000, "", "id IN (?)", []interface{}{ids})
-	var userIds []uint
+	var userIds []string
 	for _, item := range records.Data {
 		userIds = append(userIds, item.UserId)
 	}

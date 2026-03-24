@@ -14,18 +14,15 @@ require (
 	github.com/go-playground/validator/v10 v10.22.0
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/golang-jwt/jwt/v5 v5.2.2
-	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/gorilla/schema v1.4.1
 	github.com/json-iterator/go v1.1.12
 	github.com/nicksnyder/go-i18n/v2 v2.4.0
+	github.com/oklog/ulid/v2 v2.1.1
 	github.com/pquerna/otp v1.4.0
 	github.com/prometheus/client_golang v1.19.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/cobra v1.8.1
-	github.com/stretchr/testify v1.10.0
 	github.com/tkrajina/go-reflector v0.5.8
-	github.com/wenlng/go-captcha-assets v1.0.1
-	github.com/wenlng/go-captcha/v2 v2.0.2
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.45.0
 	golang.org/x/oauth2 v0.27.0
@@ -67,7 +64,6 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/image v0.18.0 // indirect
 	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/text v0.31.0 // indirect

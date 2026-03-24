@@ -34,7 +34,7 @@ var (
 	configOnce        sync.Once
 	DBConnect         *gorm.DB
 	Bundle            *i18n.Bundle
-	SupperAdminID     uint
+	SupperAdminID     string
 	Logger            *zap.SugaredLogger
 	Verifier          *oidc.IDTokenVerifier
 )

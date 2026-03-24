@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/efucloud/common"
 	"github.com/efucloud/eauth/pkg/config"
+	"github.com/efucloud/eauth/pkg/utils"
 	"github.com/go-playground/validator/v10"
 	"strings"
 	"time"
@@ -21,7 +22,7 @@ type ProviderOidcDetailList struct {
 // ProviderOidcDetail OIDC提供商详情
 type ProviderOidcDetail struct {
 	//主键
-	ID uint `gorm:"primarykey;column:id" json:"id" description:"记录ID"`
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"id" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"createdAt" description:"创建时间"`
 	//创建时间
@@ -50,6 +51,7 @@ type ProviderOidcDetail struct {
 
 // ProviderOidcCreate OIDC提供商创建
 type ProviderOidcCreate struct {
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"-" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"-" description:"创建时间"`
 	//提供商名称
@@ -76,6 +78,7 @@ type ProviderOidcCreate struct {
 
 func (ins *ProviderOidcCreate) Default(ctx context.Context) {
 	ins.CreatedAt = time.Now()
+	ins.ID = utils.GenerateDatabaseId()
 	switch ins.Category {
 	case config.ProviderOidcGitlab:
 		if len(ins.AuthorizationEndpoint) == 0 {
@@ -308,7 +311,7 @@ func (ins *ProviderOidcCreate) Validate(ctx context.Context) (err error) {
 // ProviderOidcUpdate OIDC提供商修改
 type ProviderOidcUpdate struct {
 	//主键
-	ID uint `gorm:"primarykey;column:id" json:"id" validate:"required" description:"记录ID"`
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"id" validate:"required" description:"记录ID"`
 	//创建时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"-" description:"更新时间"`
 	//提供商名称

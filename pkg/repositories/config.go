@@ -23,7 +23,7 @@ func (repo *ConfigRepository) GetConfigByCode(ctx context.Context, code string) 
 		config.Logger.Error(errorData.Err)
 		errorData.ResponseCode = http.StatusInternalServerError
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
-	} else if result.ID == 0 {
+	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
 		errorData.Err = fmt.Errorf("not found system config by code: %s", code)
@@ -32,14 +32,14 @@ func (repo *ConfigRepository) GetConfigByCode(ctx context.Context, code string) 
 	return
 }
 
-func (repo *ConfigRepository) GetConfigByID(ctx context.Context, id uint) (result dtos.ConfigDetail, errorData common.ErrorData) {
+func (repo *ConfigRepository) GetConfigByID(ctx context.Context, id string) (result dtos.ConfigDetail, errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.ConfigTableName).Where("id = ?", id).Find(&result).Error
 	if errorData.IsNotNil() {
 		errorData = daos.ParserDatabaseError(ctx, errorData)
 		config.Logger.Error(errorData.Err)
 		errorData.ResponseCode = http.StatusInternalServerError
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
-	} else if result.ID == 0 {
+	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
 		errorData.Err = fmt.Errorf("not found system config by id: %d", id)
@@ -77,7 +77,7 @@ func (repo *ConfigRepository) AddConfig(ctx context.Context, model dtos.ConfigCr
 	return result, errorData
 }
 
-func (repo *ConfigRepository) DeleteConfig(ctx context.Context, id uint) (errorData common.ErrorData) {
+func (repo *ConfigRepository) DeleteConfig(ctx context.Context, id string) (errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.ConfigTableName).Where("id = ?", id).Delete(nil).Error
 	if errorData.IsNotNil() {
 		errorData = daos.ParserDatabaseError(ctx, errorData)

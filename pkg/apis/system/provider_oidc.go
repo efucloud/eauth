@@ -162,17 +162,9 @@ func (r ProviderOidcResource) get(req *restful.Request, resp *restful.Response) 
 	}
 	ctx = context.WithValue(ctx, config.RequestLanguage, lang)
 
-	id := common.StringsToUint(req.PathParameter("id"))
-	if id < 1 {
-		errorData.MsgCode = config.MsgCodePathIdInvalid
-		errorData.ResponseCode = http.StatusBadRequest
-		errorData.Lang = lang
-		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
-		return
-	}
-	result, errorData = r.Svc.GetProviderOidcById(ctx, id)
+	result, errorData = r.Svc.GetProviderOidcById(ctx, req.PathParameter("id"))
 	if !errorData.IsNil() {
-		config.Logger.Errorf("get oidc proivder by id: %d failed, err: %s", id, errorData.Err.Error())
+		config.Logger.Errorf("get oidc proivder by id: %s failed, err: %s", req.PathParameter("id"), errorData.Err.Error())
 		errorData.Lang = lang
 		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
 		return

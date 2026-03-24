@@ -104,7 +104,7 @@ func (r MultiFactorAuthResource) bound(req *restful.Request, resp *restful.Respo
 		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
 		return
 	}
-	result = r.Svc.BoundUserMultiFactorAuth(ctx, userId.(uint), model.Code)
+	result = r.Svc.BoundUserMultiFactorAuth(ctx, userId.(string), model.Code)
 	common.ResponseSuccess(resp, result)
 }
 func (r MultiFactorAuthResource) list(req *restful.Request, resp *restful.Response) {
@@ -162,7 +162,7 @@ func (r MultiFactorAuthResource) reset(req *restful.Request, resp *restful.Respo
 		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
 		return
 	}
-	result, errorData = r.Svc.ResetUserMultiFactorAuth(ctx, userId.(uint), model.Code)
+	result, errorData = r.Svc.ResetUserMultiFactorAuth(ctx, userId.(string), model.Code)
 	if errorData.IsNotNil() {
 		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
 		return
@@ -219,7 +219,7 @@ func (r MultiFactorAuthResource) personalMfaInfo(req *restful.Request, resp *res
 		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
 		return
 	}
-	result = r.Svc.GetUserMultiFactorAuthByUserId(ctx, userId.(uint))
+	result = r.Svc.GetUserMultiFactorAuthByUserId(ctx, userId.(string))
 	if result.Status == "bound" {
 		result.Secret = ""
 		result.Image = ""

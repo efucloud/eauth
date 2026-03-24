@@ -16,14 +16,14 @@ type ProviderLdapRepository struct {
 	DB *gorm.DB
 }
 
-func (repo *ProviderLdapRepository) GetProviderLdapById(ctx context.Context, id uint) (result dtos.ProviderLdapDetail, errorData common.ErrorData) {
+func (repo *ProviderLdapRepository) GetProviderLdapById(ctx context.Context, id string) (result dtos.ProviderLdapDetail, errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.ProviderLdapTableName).Where("id = ?", id).Find(&result).Error
 	if errorData.IsNotNil() {
 		errorData = daos.ParserDatabaseError(ctx, errorData)
 		config.Logger.Error(errorData.Err)
 		errorData.ResponseCode = http.StatusInternalServerError
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
-	} else if result.ID == 0 {
+	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
 		errorData.Err = fmt.Errorf("not found system provider ldap by id: %d", id)
@@ -61,7 +61,7 @@ func (repo *ProviderLdapRepository) AddProviderLdap(ctx context.Context, model d
 	return result, errorData
 }
 
-func (repo *ProviderLdapRepository) DeleteProviderLdap(ctx context.Context, ids []uint) (errorData common.ErrorData) {
+func (repo *ProviderLdapRepository) DeleteProviderLdap(ctx context.Context, ids []string) (errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.ProviderLdapTableName).Where("id IN (?)", ids).Delete(nil).Error
 	if errorData.IsNotNil() {
 		errorData = daos.ParserDatabaseError(ctx, errorData)

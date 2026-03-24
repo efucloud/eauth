@@ -272,7 +272,7 @@ func (r OAuthResource) AddWebService(ws *restful.WebService) {
 func (r OAuthResource) userinfoNoError(req *restful.Request, resp *restful.Response) {
 	var userinfo dtos.AuthedUserInfo
 	userId := filters.GetUserInfo(req)
-	if userId > 0 {
+	if len(userId) > 0 {
 		userinfo, _ = r.Svc.Userinfo(context.Background(), userId)
 	}
 	common.ResponseSuccess(resp, userinfo)
@@ -398,7 +398,7 @@ func (r OAuthResource) getOidcCode(req *restful.Request, resp *restful.Response)
 		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
 		return
 	}
-	result, errorData = r.Svc.ApplicationAuthCode(ctx, userId.(uint), model)
+	result, errorData = r.Svc.ApplicationAuthCode(ctx, userId.(string), model)
 	if errorData.IsNotNil() {
 		config.Logger.Errorf("add account failed, err: %s", errorData.Err.Error())
 		errorData.Lang = lang
@@ -501,7 +501,7 @@ func (r OAuthResource) selfInfo(req *restful.Request, resp *restful.Response) {
 		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
 		return
 	}
-	if userId.(uint) != model.ID {
+	if userId.(string) != model.ID {
 		errorData.MsgCode = config.MsgCodeStatusForbidden
 		errorData.Lang = lang
 		errorData.Err = fmt.Errorf("only can change your self information")
@@ -693,7 +693,7 @@ func (r OAuthResource) publicKeys(req *restful.Request, resp *restful.Response) 
 
 	result, errorData = r.Svc.GetPublicKeys(ctx)
 	if errorData.IsNotNil() {
-		config.Logger.Errorf("get org: %d public keys failed, err: %s", errorData.Err.Error())
+		config.Logger.Errorf("get org public keys failed, err: %s", errorData.Err.Error())
 		errorData.Lang = lang
 		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
 		return
@@ -790,7 +790,7 @@ func (r OAuthResource) userinfo(req *restful.Request, resp *restful.Response) {
 		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
 		return
 	}
-	userinfo, errorData = r.Svc.Userinfo(ctx, userId.(uint))
+	userinfo, errorData = r.Svc.Userinfo(ctx, userId.(string))
 	if errorData.IsNotNil() {
 		config.Logger.Error(errorData.Err)
 		errorData.Lang = lang

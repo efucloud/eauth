@@ -25,7 +25,7 @@ func (repo *AppAuthRecordRepository) GetAppAuthRecordByCode(ctx context.Context,
 		config.Logger.Error(errorData.Err)
 		errorData.ResponseCode = http.StatusInternalServerError
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
-	} else if result.ID == 0 {
+	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
 		errorData.Err = fmt.Errorf("not found application by code: %s", code)
@@ -34,7 +34,7 @@ func (repo *AppAuthRecordRepository) GetAppAuthRecordByCode(ctx context.Context,
 	return
 }
 
-func (repo *AppAuthRecordRepository) GetAppAuthRecordById(ctx context.Context, id uint) (result dtos.AppAuthRecordDetail, errorData common.ErrorData) {
+func (repo *AppAuthRecordRepository) GetAppAuthRecordById(ctx context.Context, id string) (result dtos.AppAuthRecordDetail, errorData common.ErrorData) {
 
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.AppAuthRecordTableName).Where("id = ?", id).Find(&result).Error
 	if errorData.IsNotNil() {
@@ -42,7 +42,7 @@ func (repo *AppAuthRecordRepository) GetAppAuthRecordById(ctx context.Context, i
 		config.Logger.Error(errorData.Err)
 		errorData.ResponseCode = http.StatusInternalServerError
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
-	} else if result.ID == 0 {
+	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
 		errorData.Err = fmt.Errorf("not found application by id: %d", id)
@@ -79,7 +79,7 @@ func (repo *AppAuthRecordRepository) AddAppAuthRecord(ctx context.Context, model
 	}
 	return result, errorData
 }
-func (repo *AppAuthRecordRepository) DeleteAppAuthRecord(ctx context.Context, ids []uint) (errorData common.ErrorData) {
+func (repo *AppAuthRecordRepository) DeleteAppAuthRecord(ctx context.Context, ids []string) (errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.AppAuthRecordTableName).Where("id IN (?) ", ids).Delete(nil).Error
 	if errorData.IsNotNil() {
 		errorData = daos.ParserDatabaseError(ctx, errorData)

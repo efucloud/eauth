@@ -56,7 +56,7 @@ func (svc *UserAuthProfileTempService) AddUserAuthProfileTemp(ctx context.Contex
 	return
 }
 
-func (svc *UserAuthProfileTempService) DeleteUserAuthProfileTemp(ctx context.Context, ids []uint) (errorData common.ErrorData) {
+func (svc *UserAuthProfileTempService) DeleteUserAuthProfileTemp(ctx context.Context, ids []string) (errorData common.ErrorData) {
 	svc.init(ctx)
 	errorData = svc.repo.DeleteUserAuthProfileTemp(ctx, ids)
 	if errorData.IsNotNil() {

@@ -261,15 +261,7 @@ func (r UserResource) get(req *restful.Request, resp *restful.Response) {
 	}
 	ctx = context.WithValue(ctx, config.RequestLanguage, lang)
 
-	id := common.StringsToUint(req.PathParameter("id"))
-	if id < 1 {
-		errorData.MsgCode = config.MsgCodePathIdInvalid
-		errorData.ResponseCode = http.StatusBadRequest
-		errorData.Lang = lang
-		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
-		return
-	}
-	result, errorData = r.Svc.GetUserByID(ctx, id)
+	result, errorData = r.Svc.GetUserByID(ctx, req.PathParameter("id"))
 	if !errorData.IsNil() {
 		config.Logger.Errorf("get account failed, err: %s", errorData.Err.Error())
 		errorData.Lang = lang

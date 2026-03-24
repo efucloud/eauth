@@ -23,7 +23,7 @@ func (repo *ProviderOidcRepository) GetProviderOidcByCategory(ctx context.Contex
 		config.Logger.Error(errorData.Err)
 		errorData.ResponseCode = http.StatusInternalServerError
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
-	} else if result.ID == 0 {
+	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
 		errorData.Err = fmt.Errorf("not found  provider oidc by category: %s", category)
@@ -31,14 +31,14 @@ func (repo *ProviderOidcRepository) GetProviderOidcByCategory(ctx context.Contex
 	}
 	return
 }
-func (repo *ProviderOidcRepository) GetProviderOidcById(ctx context.Context, id uint) (result dtos.ProviderOidcDetail, errorData common.ErrorData) {
+func (repo *ProviderOidcRepository) GetProviderOidcById(ctx context.Context, id string) (result dtos.ProviderOidcDetail, errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.ProviderOidcTableName).Where("id = ?", id).Find(&result).Error
 	if errorData.IsNotNil() {
 		errorData = daos.ParserDatabaseError(ctx, errorData)
 		config.Logger.Error(errorData.Err)
 		errorData.ResponseCode = http.StatusInternalServerError
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
-	} else if result.ID == 0 {
+	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
 		errorData.Err = fmt.Errorf("not found  provider oidc by id: %d", id)
@@ -76,7 +76,7 @@ func (repo *ProviderOidcRepository) AddProviderOidc(ctx context.Context, model d
 	return result, errorData
 }
 
-func (repo *ProviderOidcRepository) DeleteProviderOidc(ctx context.Context, ids []uint) (errorData common.ErrorData) {
+func (repo *ProviderOidcRepository) DeleteProviderOidc(ctx context.Context, ids []string) (errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.ProviderOidcTableName).Where("id IN (?)", ids).Delete(nil).Error
 	if errorData.IsNotNil() {
 		errorData = daos.ParserDatabaseError(ctx, errorData)

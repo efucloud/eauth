@@ -23,11 +23,11 @@ func (svc *UserService) init(ctx context.Context) {
 		svc.repo = repositories.UserRepository{DB: config.DBConnect}
 	}
 }
-func (svc *UserService) UpdateUserMFa(ctx context.Context, userIds []uint, mfa bool) (errorData common.ErrorData) {
+func (svc *UserService) UpdateUserMFa(ctx context.Context, userIds []string, mfa bool) (errorData common.ErrorData) {
 	svc.init(ctx)
 	return svc.repo.UpdateUserMFa(ctx, userIds, mfa)
 }
-func (svc *UserService) UpdateUserAvatar(ctx context.Context, userId uint, avatarAddress string) (errorData common.ErrorData) {
+func (svc *UserService) UpdateUserAvatar(ctx context.Context, userId string, avatarAddress string) (errorData common.ErrorData) {
 	svc.init(ctx)
 	return svc.repo.UpdateUserAvatar(ctx, userId, avatarAddress)
 }
@@ -56,17 +56,17 @@ func (svc *UserService) ChangeStatusUser(ctx context.Context, model dtos.UserSta
 	errorData = svc.repo.ChangeStatusUser(ctx, model)
 	return
 }
-func (svc *UserService) GetUsersByIds(ctx context.Context, ids []uint) (results dtos.UserDetailList, errorData common.ErrorData) {
+func (svc *UserService) GetUsersByIds(ctx context.Context, ids []string) (results dtos.UserDetailList, errorData common.ErrorData) {
 	svc.init(ctx)
 	results, errorData = svc.repo.GetUsersByIds(ctx, ids)
 	return results, errorData
 }
-func (svc *UserService) GetShortUserByID(ctx context.Context, id uint) (result dtos.ShortUser, errorData common.ErrorData) {
+func (svc *UserService) GetShortUserByID(ctx context.Context, id string) (result dtos.ShortUser, errorData common.ErrorData) {
 	svc.init(ctx)
 	var user dtos.UserDetail
 	user, errorData = svc.repo.GetUserByID(ctx, id)
 	if errorData.IsNotNil() {
-		config.Logger.Errorf("getUser by id: %d failed, err: %s", id, errorData.Err.Error())
+		config.Logger.Errorf("getUser by id: %s failed, err: %s", id, errorData.Err.Error())
 		return
 	}
 	copyByJSON(user, &result)
@@ -93,11 +93,11 @@ func (svc *UserService) GetUserByEmail(ctx context.Context, email string) (resul
 
 	return result, errorData
 }
-func (svc *UserService) GetUserByID(ctx context.Context, id uint) (result dtos.UserDetail, errorData common.ErrorData) {
+func (svc *UserService) GetUserByID(ctx context.Context, id string) (result dtos.UserDetail, errorData common.ErrorData) {
 	svc.init(ctx)
 	result, errorData = svc.repo.GetUserByID(ctx, id)
 	if errorData.IsNotNil() {
-		config.Logger.Errorf("getUser by id: %d failed, err: %s", id, errorData.Err.Error())
+		config.Logger.Errorf("getUser by id: %s failed, err: %s", id, errorData.Err.Error())
 		return
 	}
 	faceSvc := FaceRecognitionService{}
@@ -168,7 +168,7 @@ func (svc *UserService) AddUser(ctx context.Context, model dtos.UserCreate) (res
 
 	return
 }
-func (svc *UserService) DeleteUser(ctx context.Context, ids []uint) (errorData common.ErrorData) {
+func (svc *UserService) DeleteUser(ctx context.Context, ids []string) (errorData common.ErrorData) {
 	svc.init(ctx)
 	tx := config.DBConnect.Begin()
 	defer func() {

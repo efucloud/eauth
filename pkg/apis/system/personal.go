@@ -78,7 +78,7 @@ func (r PersonalResource) setPassword(req *restful.Request, resp *restful.Respon
 		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
 		return
 	}
-	errorData = r.Svc.SetPassword(ctx, userId.(uint), model)
+	errorData = r.Svc.SetPassword(ctx, userId.(string), model)
 	if errorData.IsNotNil() {
 		config.Logger.Errorf("set password failed, err: %s", errorData.Err.Error())
 		errorData.Lang = lang
@@ -128,7 +128,7 @@ func (r PersonalResource) selfAvatar(req *restful.Request, resp *restful.Respons
 		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
 		return
 	}
-	errorData = r.Svc.UpdateUserAvatar(ctx, userId.(uint), publicPath)
+	errorData = r.Svc.UpdateUserAvatar(ctx, userId.(string), publicPath)
 	if errorData.IsNotNil() {
 		config.Logger.Errorf("updata user avatar failed, err: %s", errorData.Err.Error())
 		errorData.Lang = lang

@@ -23,7 +23,7 @@ func (repo *AuthProfileTempRepository) GetUserAuthProfileTempByCode(ctx context.
 		config.Logger.Error(errorData.Err)
 		errorData.ResponseCode = http.StatusInternalServerError
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
-	} else if result.ID == 0 {
+	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
 		errorData.Err = fmt.Errorf("not found record by code: %s", code)
@@ -61,7 +61,7 @@ func (repo *AuthProfileTempRepository) AddUserAuthProfileTemp(ctx context.Contex
 	return result, errorData
 }
 
-func (repo *AuthProfileTempRepository) DeleteUserAuthProfileTemp(ctx context.Context, ids []uint) (errorData common.ErrorData) {
+func (repo *AuthProfileTempRepository) DeleteUserAuthProfileTemp(ctx context.Context, ids []string) (errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.UserAuthProfileTempTableName).Where("id IN (?) ", ids).Delete(nil).Error
 	if errorData.IsNotNil() {
 		errorData = daos.ParserDatabaseError(ctx, errorData)

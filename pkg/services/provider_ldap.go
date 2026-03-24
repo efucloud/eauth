@@ -22,11 +22,11 @@ func (svc *ProviderLdapService) init(ctx context.Context) {
 	}
 }
 
-func (svc *ProviderLdapService) GetProviderLdapById(ctx context.Context, id uint) (result dtos.ProviderLdapDetail, errorData common.ErrorData) {
+func (svc *ProviderLdapService) GetProviderLdapById(ctx context.Context, id string) (result dtos.ProviderLdapDetail, errorData common.ErrorData) {
 	svc.init(ctx)
 	result, errorData = svc.repo.GetProviderLdapById(ctx, id)
 	if errorData.IsNotNil() {
-		config.Logger.Errorf("getProviderLdap by id: %d failed, err: %s", id, errorData.Err.Error())
+		config.Logger.Errorf("getProviderLdap by id: %s failed, err: %s", id, errorData.Err.Error())
 	}
 	return result, errorData
 }
@@ -71,7 +71,7 @@ func (svc *ProviderLdapService) AddProviderLdap(ctx context.Context, model dtos.
 	return
 }
 
-func (svc *ProviderLdapService) DeleteProviderLdap(ctx context.Context, ids []uint) (errorData common.ErrorData) {
+func (svc *ProviderLdapService) DeleteProviderLdap(ctx context.Context, ids []string) (errorData common.ErrorData) {
 	svc.init(ctx)
 	errorData = svc.repo.DeleteProviderLdap(ctx, ids)
 	if errorData.IsNotNil() {

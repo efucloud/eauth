@@ -10,11 +10,11 @@ import (
 type PersonalService struct {
 }
 
-func (svc *PersonalService) UpdateUserAvatar(ctx context.Context, userId uint, avatarAddress string) (errorData common.ErrorData) {
+func (svc *PersonalService) UpdateUserAvatar(ctx context.Context, userId string, avatarAddress string) (errorData common.ErrorData) {
 	userSvc := UserService{}
 	return userSvc.UpdateUserAvatar(ctx, userId, avatarAddress)
 }
-func (svc *PersonalService) SetPassword(ctx context.Context, userId uint, model dtos.SetPassword) (errorData common.ErrorData) {
+func (svc *PersonalService) SetPassword(ctx context.Context, userId string, model dtos.SetPassword) (errorData common.ErrorData) {
 	userSvc := UserService{}
 	if len(model.OldPassword) > 0 {
 		user, _ := userSvc.GetUserByID(ctx, userId)

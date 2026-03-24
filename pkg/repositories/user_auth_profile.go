@@ -16,7 +16,7 @@ type AuthProfileRepository struct {
 	DB *gorm.DB
 }
 
-func (repo *AuthProfileRepository) GetUserAuthProfilesByUserId(ctx context.Context, userId uint) (results dtos.UserAuthProfileDetailList, errorData common.ErrorData) {
+func (repo *AuthProfileRepository) GetUserAuthProfilesByUserId(ctx context.Context, userId string) (results dtos.UserAuthProfileDetailList, errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.UserAuthProfileTableName).Where("user_id = ?", userId).Find(&results.Data).Error
 	if errorData.IsNotNil() {
 		errorData = daos.ParserDatabaseError(ctx, errorData)
@@ -36,14 +36,14 @@ func (repo *AuthProfileRepository) GetUserAuthProfileByProviderAndId(ctx context
 	}
 	return
 }
-func (repo *AuthProfileRepository) GetUserAuthProfileByID(ctx context.Context, id uint) (result dtos.UserAuthProfileDetail, errorData common.ErrorData) {
+func (repo *AuthProfileRepository) GetUserAuthProfileByID(ctx context.Context, id string) (result dtos.UserAuthProfileDetail, errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.UserAuthProfileTableName).Where("id = ?", id).Find(&result).Error
 	if errorData.IsNotNil() {
 		errorData = daos.ParserDatabaseError(ctx, errorData)
 		config.Logger.Error(errorData.Err)
 		errorData.ResponseCode = http.StatusInternalServerError
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
-	} else if result.ID == 0 {
+	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
 		errorData.Err = fmt.Errorf("not found record by id: %d", id)
@@ -81,7 +81,7 @@ func (repo *AuthProfileRepository) AddUserAuthProfile(ctx context.Context, model
 	return result, errorData
 }
 
-func (repo *AuthProfileRepository) DeleteUserAuthProfileByUserIds(ctx context.Context, userIds []uint) (errorData common.ErrorData) {
+func (repo *AuthProfileRepository) DeleteUserAuthProfileByUserIds(ctx context.Context, userIds []string) (errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.UserAuthProfileTableName).Where("user_id IN (?) ", userIds).Delete(nil).Error
 	if errorData.IsNotNil() {
 		errorData = daos.ParserDatabaseError(ctx, errorData)
@@ -92,7 +92,7 @@ func (repo *AuthProfileRepository) DeleteUserAuthProfileByUserIds(ctx context.Co
 	return
 }
 
-func (repo *AuthProfileRepository) DeleteUserAuthProfile(ctx context.Context, ids []uint) (errorData common.ErrorData) {
+func (repo *AuthProfileRepository) DeleteUserAuthProfile(ctx context.Context, ids []string) (errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.UserAuthProfileTableName).Where("id IN (?) ", ids).Delete(nil).Error
 	if errorData.IsNotNil() {
 		errorData = daos.ParserDatabaseError(ctx, errorData)

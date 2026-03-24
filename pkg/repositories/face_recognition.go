@@ -17,7 +17,7 @@ type FaceRecognitionRepository struct {
 	DB *gorm.DB
 }
 
-func (repo *FaceRecognitionRepository) GetFaceRecognitionById(ctx context.Context, id uint) (result dtos.FaceRecognitionDetail, errorData common.ErrorData) {
+func (repo *FaceRecognitionRepository) GetFaceRecognitionById(ctx context.Context, id string) (result dtos.FaceRecognitionDetail, errorData common.ErrorData) {
 
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.FaceRecognitionTableName).Where("id = ?", id).Find(&result).Error
 	if errorData.IsNotNil() {
@@ -25,7 +25,7 @@ func (repo *FaceRecognitionRepository) GetFaceRecognitionById(ctx context.Contex
 		config.Logger.Error(errorData.Err)
 		errorData.ResponseCode = http.StatusInternalServerError
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
-	} else if result.ID == 0 {
+	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
 		errorData.Err = fmt.Errorf("not foundFaceRecognition by id: %d", id)
@@ -62,7 +62,7 @@ func (repo *FaceRecognitionRepository) AddFaceRecognition(ctx context.Context, m
 	}
 	return result, errorData
 }
-func (repo *FaceRecognitionRepository) DeleteFaceRecognition(ctx context.Context, ids []uint) (errorData common.ErrorData) {
+func (repo *FaceRecognitionRepository) DeleteFaceRecognition(ctx context.Context, ids []string) (errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.FaceRecognitionTableName).Where("id IN (?) ", ids).Delete(nil).Error
 	if errorData.IsNotNil() {
 		errorData = daos.ParserDatabaseError(ctx, errorData)
@@ -89,7 +89,7 @@ func (repo *FaceRecognitionRepository) ChangeStatus(ctx context.Context, model d
 	return
 }
 
-func (repo *FaceRecognitionRepository) GetUserPersonalFaceRecognitions(ctx context.Context, userId uint) (results dtos.FaceRecognitionDetailList, errorData common.ErrorData) {
+func (repo *FaceRecognitionRepository) GetUserPersonalFaceRecognitions(ctx context.Context, userId string) (results dtos.FaceRecognitionDetailList, errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.FaceRecognitionTableName).Where("user_id = ?", userId).Find(&results.Data).Error
 	results.Total = int64(len(results.Data))
 	return

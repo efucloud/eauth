@@ -31,11 +31,11 @@ func (svc *ProviderOidcService) GetProviderOidcByCategory(ctx context.Context, c
 	return result, errorData
 }
 
-func (svc *ProviderOidcService) GetProviderOidcById(ctx context.Context, id uint) (result dtos.ProviderOidcDetail, errorData common.ErrorData) {
+func (svc *ProviderOidcService) GetProviderOidcById(ctx context.Context, id string) (result dtos.ProviderOidcDetail, errorData common.ErrorData) {
 	svc.init(ctx)
 	result, errorData = svc.repo.GetProviderOidcById(ctx, id)
 	if errorData.IsNotNil() {
-		config.Logger.Errorf("getProviderOidc by id: %d failed, err: %s", id, errorData.Err.Error())
+		config.Logger.Errorf("getProviderOidc by id: %s failed, err: %s", id, errorData.Err.Error())
 	}
 	return result, errorData
 }
@@ -80,7 +80,7 @@ func (svc *ProviderOidcService) AddProviderOidc(ctx context.Context, model dtos.
 	return
 }
 
-func (svc *ProviderOidcService) DeleteProviderOidc(ctx context.Context, ids []uint) (errorData common.ErrorData) {
+func (svc *ProviderOidcService) DeleteProviderOidc(ctx context.Context, ids []string) (errorData common.ErrorData) {
 	svc.init(ctx)
 	errorData = svc.repo.DeleteProviderOidc(ctx, ids)
 	if errorData.IsNotNil() {

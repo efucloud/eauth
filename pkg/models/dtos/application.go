@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/efucloud/common"
+	"github.com/efucloud/eauth/pkg/utils"
 	"github.com/go-playground/validator/v10"
 	"strings"
 	"time"
@@ -20,7 +21,7 @@ type ApplicationDetailList struct {
 // ShortApplication 简单应用信息
 type ShortApplication struct {
 	//主键
-	ID uint `gorm:"primarykey;column:id" json:"id" description:"记录ID"`
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"id" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"createdAt" description:"创建时间"`
 	//创建时间
@@ -48,7 +49,7 @@ type ShortApplication struct {
 // ApplicationDetail 普通应用详情
 type ApplicationDetail struct {
 	//主键
-	ID uint `gorm:"primarykey;column:id" json:"id" description:"记录ID"`
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"id" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"createdAt" description:"创建时间"`
 	//创建时间
@@ -79,6 +80,7 @@ func (ins *ApplicationDetail) RedirectUriMatch(redirectUri string) bool {
 
 // ApplicationCreate 普通应用创建
 type ApplicationCreate struct {
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"-" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"-" description:"创建时间"`
 	//应用名称
@@ -102,8 +104,10 @@ type ApplicationCreate struct {
 }
 
 func (ins *ApplicationCreate) Default(ctx context.Context) {
+	ins.ID = utils.GenerateDatabaseId()
 	ins.ClientId = common.NewSecureID(16)
 	ins.ClientSecret = common.NewSecureID(32)
+
 }
 func (ins *ApplicationCreate) Validate(ctx context.Context) (err error) {
 	validate := validator.New()
@@ -129,7 +133,7 @@ func (ins *ApplicationCreate) Validate(ctx context.Context) (err error) {
 // ApplicationUpdate 普通应用修改
 type ApplicationUpdate struct {
 	//主键
-	ID uint `gorm:"primarykey;column:id" json:"id" validate:"required" description:"记录ID"`
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"id" validate:"required" description:"记录ID"`
 	//创建时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"-" description:"更新时间"`
 	//应用名称
@@ -149,7 +153,7 @@ type ApplicationUpdate struct {
 }
 
 func (ins *ApplicationUpdate) Default(ctx context.Context) {
-
+	ins.UpdatedAt = time.Now()
 }
 func (ins *ApplicationUpdate) Validate(ctx context.Context) (err error) {
 	validate := validator.New()

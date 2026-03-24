@@ -3,14 +3,21 @@ package utils
 import (
 	"errors"
 	"fmt"
+	ulid "github.com/oklog/ulid/v2"
+	"golang.org/x/crypto/bcrypt"
 	"math/rand"
 	"regexp"
 	"strings"
 	"time"
-
-	"golang.org/x/crypto/bcrypt"
 )
 
+func GenerateDatabaseId() string {
+	entropy := rand.New(rand.NewSource(time.Now().UnixNano()))
+	ms := ulid.Timestamp(time.Now())
+	id, _ := ulid.New(ms, entropy)
+	m := strings.ToLower(id.String())
+	return m
+}
 func ArrayItemHasPrefix(key string, arrays []string) bool {
 	for _, item := range arrays {
 		if strings.HasPrefix(key, item) || key == item {

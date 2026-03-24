@@ -12,7 +12,7 @@ import (
 	"net/http"
 )
 
-func GetUserInfo(req *restful.Request) (userId uint) {
+func GetUserInfo(req *restful.Request) (userId string) {
 	var (
 		errorData common.ErrorData
 	)
@@ -50,7 +50,7 @@ func Auth(req *restful.Request, resp *restful.Response, chain *restful.FilterCha
 		ctx = req.Attribute(config.RequestContext).(context.Context)
 	}
 	userId := GetUserInfo(req)
-	if userId == 0 {
+	if len(userId) == 0 {
 		errorData.Lang = lang
 		errorData.Err = fmt.Errorf("未登录或者认证信息无效")
 		errorData.ResponseCode = http.StatusUnauthorized
@@ -76,7 +76,7 @@ func Permission(roles []string) func(req *restful.Request, resp *restful.Respons
 			return
 		}
 		userSvc := services.UserService{}
-		user, _ := userSvc.GetUserByID(ctx, userId.(uint))
+		user, _ := userSvc.GetUserByID(ctx, userId.(string))
 		if !common.StringKeyInArray(user.Role, roles) {
 			errorData.Lang = lang
 			errorData.ResponseCode = http.StatusForbidden

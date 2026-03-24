@@ -51,15 +51,15 @@ func (svc *FaceRecognitionService) GetUserPersonalFaceRecognitionsByUsername(ctx
 	user, _ := userSvc.GetUserByUsername(ctx, username)
 	return svc.repo.GetUserPersonalFaceRecognitions(ctx, user.ID)
 }
-func (svc *FaceRecognitionService) GetUserPersonalFaceRecognitions(ctx context.Context, userId uint) (results dtos.FaceRecognitionDetailList, errorData common.ErrorData) {
+func (svc *FaceRecognitionService) GetUserPersonalFaceRecognitions(ctx context.Context, userId string) (results dtos.FaceRecognitionDetailList, errorData common.ErrorData) {
 	svc.init(ctx)
 	return svc.repo.GetUserPersonalFaceRecognitions(ctx, userId)
 }
-func (svc *FaceRecognitionService) GetFaceRecognitionById(ctx context.Context, id uint) (result dtos.FaceRecognitionDetail, errorData common.ErrorData) {
+func (svc *FaceRecognitionService) GetFaceRecognitionById(ctx context.Context, id string) (result dtos.FaceRecognitionDetail, errorData common.ErrorData) {
 	svc.init(ctx)
 	result, errorData = svc.repo.GetFaceRecognitionById(ctx, id)
 	if errorData.IsNotNil() {
-		config.Logger.Errorf("getFaceRecognition by id: %d failed, err: %s", id, errorData.Err.Error())
+		config.Logger.Errorf("getFaceRecognition by id: %s failed, err: %s", id, errorData.Err.Error())
 	}
 	return result, errorData
 }
@@ -117,7 +117,7 @@ func (svc *FaceRecognitionService) AddFaceRecognition(ctx context.Context, model
 	return
 }
 
-func (svc *FaceRecognitionService) DeleteFaceRecognition(ctx context.Context, ids []uint) (errorData common.ErrorData) {
+func (svc *FaceRecognitionService) DeleteFaceRecognition(ctx context.Context, ids []string) (errorData common.ErrorData) {
 	svc.init(ctx)
 	errorData = svc.repo.DeleteFaceRecognition(ctx, ids)
 	if errorData.IsNotNil() {

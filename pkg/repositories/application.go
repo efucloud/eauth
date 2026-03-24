@@ -24,7 +24,7 @@ func (repo *ApplicationRepository) GetApplicationByClientId(ctx context.Context,
 		config.Logger.Error(errorData.Err)
 		errorData.ResponseCode = http.StatusInternalServerError
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
-	} else if result.ID == 0 {
+	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
 		errorData.Err = fmt.Errorf("not found application by clientId: %s", clientId)
@@ -40,7 +40,7 @@ func (repo *ApplicationRepository) GetApplicationByCode(ctx context.Context, cod
 		config.Logger.Error(errorData.Err)
 		errorData.ResponseCode = http.StatusInternalServerError
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
-	} else if result.ID == 0 {
+	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
 		errorData.Err = fmt.Errorf("not found application by code: %s", code)
@@ -49,7 +49,7 @@ func (repo *ApplicationRepository) GetApplicationByCode(ctx context.Context, cod
 	return
 }
 
-func (repo *ApplicationRepository) GetApplicationById(ctx context.Context, id uint) (result dtos.ApplicationDetail, errorData common.ErrorData) {
+func (repo *ApplicationRepository) GetApplicationById(ctx context.Context, id string) (result dtos.ApplicationDetail, errorData common.ErrorData) {
 
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.ApplicationTableName).Where("id = ?", id).Find(&result).Error
 	if errorData.IsNotNil() {
@@ -57,7 +57,7 @@ func (repo *ApplicationRepository) GetApplicationById(ctx context.Context, id ui
 		config.Logger.Error(errorData.Err)
 		errorData.ResponseCode = http.StatusInternalServerError
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
-	} else if result.ID == 0 {
+	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
 		errorData.Err = fmt.Errorf("not found application by id: %d", id)
@@ -94,7 +94,7 @@ func (repo *ApplicationRepository) AddApplication(ctx context.Context, model dto
 	}
 	return result, errorData
 }
-func (repo *ApplicationRepository) DeleteApplication(ctx context.Context, ids []uint) (errorData common.ErrorData) {
+func (repo *ApplicationRepository) DeleteApplication(ctx context.Context, ids []string) (errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.ApplicationTableName).Where("id IN (?) ", ids).Delete(nil).Error
 	if errorData.IsNotNil() {
 		errorData = daos.ParserDatabaseError(ctx, errorData)

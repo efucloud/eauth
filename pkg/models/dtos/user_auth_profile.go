@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/efucloud/common"
+	"github.com/efucloud/eauth/pkg/utils"
 	"github.com/go-playground/validator/v10"
 	"strings"
 	"time"
@@ -20,13 +21,13 @@ type UserAuthProfileDetailList struct {
 // UserAuthProfileDetail 系统用户认证方式详情
 type UserAuthProfileDetail struct {
 	//主键
-	ID uint `gorm:"primarykey;column:id" json:"id" description:"记录ID"`
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"id" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"createdAt" description:"创建时间"`
 	//创建时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"updatedAt,omitempty" description:"更新时间"`
 	//用户ID
-	UserId uint `gorm:"column:user_id" json:"userId" validate:"required" description:"本系统用户ID"`
+	UserId string `gorm:"column:user_id" json:"userId" validate:"required" description:"本系统用户ID"`
 	//认证类型provider中的code,email,phone
 	Provider string `gorm:"type:varchar(255);column:provider" json:"provider" description:"认证类型"`
 	//第三方登录用户的id，邮箱，手机号
@@ -50,10 +51,11 @@ type UserAuthProfileDetail struct {
 
 // UserAuthProfileCreate 系统用户认证方式创建
 type UserAuthProfileCreate struct {
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"-" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"-" description:"创建时间"`
 	//用户ID
-	UserId uint `gorm:"column:user_id" json:"userId" validate:"required" description:"本系统用户ID"`
+	UserId string `gorm:"column:user_id" json:"userId" validate:"required" description:"本系统用户ID"`
 	//认证类型provider中的code,email,phone
 	Provider string `gorm:"type:varchar(255);column:provider" json:"provider" validate:"required" description:"认证类型"`
 	//第三方登录用户的id，邮箱，手机号
@@ -78,6 +80,7 @@ type UserAuthProfileCreate struct {
 func (ins *UserAuthProfileCreate) Default(ctx context.Context) {
 	ins.LatestUsedTime = time.Now().Format(time.DateTime)
 	ins.CreatedAt = time.Now()
+	ins.ID = utils.GenerateDatabaseId()
 
 }
 func (ins *UserAuthProfileCreate) Validate(ctx context.Context) (err error) {
@@ -104,11 +107,11 @@ func (ins *UserAuthProfileCreate) Validate(ctx context.Context) (err error) {
 // UserAuthProfileUpdate 系统用户认证方式修改
 type UserAuthProfileUpdate struct {
 	//记录ID
-	ID uint `gorm:"primarykey;column:id" json:"id" description:"记录ID"`
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"id" description:"记录ID"`
 	//创建时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"-" description:"更新时间"`
 	//用户ID
-	UserId uint `gorm:"column:user_id" json:"userId" validate:"required" description:"本系统用户ID"`
+	UserId string `gorm:"column:user_id;type:varchar(50)" json:"userId" validate:"required" description:"本系统用户ID"`
 	//第三方登录用户名
 	LoginName string `gorm:"type:varchar(255);column:login_name" json:"loginName" description:"第三方认证的用户名"`
 	//昵称
@@ -152,7 +155,7 @@ func (ins *UserAuthProfileUpdate) Validate(ctx context.Context) (err error) {
 // UserAuthProfileStatus 禁用后，用户将不能使用该认证方式登陆系统
 type UserAuthProfileStatus struct {
 	//主键
-	Ids []uint `json:"ids" validate:"required" description:"主键"`
+	Ids []string `json:"ids" validate:"required" description:"主键"`
 	//更新时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"-" description:"更新时间"`
 	//是否有效

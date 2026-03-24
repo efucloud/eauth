@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/efucloud/common"
+	"github.com/efucloud/eauth/pkg/utils"
 	"github.com/go-playground/validator/v10"
 	"strings"
 	"time"
@@ -20,13 +21,13 @@ type UserTokenDetailList struct {
 // UserTokenDetail 系统用户Token详情
 type UserTokenDetail struct {
 	//主键
-	ID uint `gorm:"primarykey;column:id" json:"id" description:"记录ID"`
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"id" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"createdAt" description:"创建时间"`
 	//创建时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"updatedAt,omitempty" description:"更新时间"`
 	//用户ID
-	UserId uint `gorm:"column:user_id" json:"userId" validate:"required" description:"用户ID"`
+	UserId string `gorm:"column:user_id" json:"userId" validate:"required" description:"用户ID"`
 	//用户
 	User ShortUser `gorm:"-" json:"user" description:"用户"`
 	//客户端ID
@@ -47,10 +48,11 @@ type UserTokenDetail struct {
 
 // UserTokenCreate 系统用户Token创建
 type UserTokenCreate struct {
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"-" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"-" description:"创建时间"`
 	//用户ID
-	UserId uint `gorm:"column:user_id" json:"userId" validate:"required" description:"用户ID"`
+	UserId string `gorm:"column:user_id" json:"userId" validate:"required" description:"用户ID"`
 	//客户端ID
 	ClientId string `gorm:"type:varchar(255)" json:"clientId" validate:"required" description:"client ID"`
 	//过期时间(时间戳)
@@ -69,6 +71,7 @@ type UserTokenCreate struct {
 
 func (ins *UserTokenCreate) Default(ctx context.Context) {
 	ins.CreatedAt = time.Now()
+	ins.ID = utils.GenerateDatabaseId()
 }
 func (ins *UserTokenCreate) Validate(ctx context.Context) (err error) {
 	validate := validator.New()
@@ -94,7 +97,7 @@ func (ins *UserTokenCreate) Validate(ctx context.Context) (err error) {
 // UserTokenUpdate 系统用户Token修改
 type UserTokenUpdate struct {
 	//主键
-	ID uint `gorm:"primarykey;column:id" json:"id" validate:"required" description:"记录ID"`
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"id" validate:"required" description:"记录ID"`
 	//创建时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"-" description:"更新时间"`
 	//用户ID

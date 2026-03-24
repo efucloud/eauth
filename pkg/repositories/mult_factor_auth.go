@@ -17,7 +17,7 @@ type MultiFactorAuthRepository struct {
 	DB *gorm.DB
 }
 
-func (repo *MultiFactorAuthRepository) GetMultiFactorAuthById(ctx context.Context, id uint) (result dtos.MultiFactorAuthDetail, errorData common.ErrorData) {
+func (repo *MultiFactorAuthRepository) GetMultiFactorAuthById(ctx context.Context, id string) (result dtos.MultiFactorAuthDetail, errorData common.ErrorData) {
 
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.MultiFactorAuthTableName).Where("id = ?", id).Find(&result).Error
 	if errorData.IsNotNil() {
@@ -25,7 +25,7 @@ func (repo *MultiFactorAuthRepository) GetMultiFactorAuthById(ctx context.Contex
 		config.Logger.Error(errorData.Err)
 		errorData.ResponseCode = http.StatusInternalServerError
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
-	} else if result.ID == 0 {
+	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
 		errorData.Err = fmt.Errorf("not foundMultiFactorAuth by id: %d", id)
@@ -63,13 +63,13 @@ func (repo *MultiFactorAuthRepository) AddMultiFactorAuth(ctx context.Context, m
 	return result, errorData
 }
 
-func (repo *MultiFactorAuthRepository) DeleteMultiFactorAuthByUserIds(ctx context.Context, userIds []uint) (errorData common.ErrorData) {
+func (repo *MultiFactorAuthRepository) DeleteMultiFactorAuthByUserIds(ctx context.Context, userIds []string) (errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.MultiFactorAuthTableName).Where("user_id IN (?) ", userIds).Delete(nil).Error
 
 	return errorData
 }
 
-func (repo *MultiFactorAuthRepository) DeleteMultiFactorAuth(ctx context.Context, ids []uint) (errorData common.ErrorData) {
+func (repo *MultiFactorAuthRepository) DeleteMultiFactorAuth(ctx context.Context, ids []string) (errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.MultiFactorAuthTableName).Where("id IN (?) ", ids).Delete(nil).Error
 	if errorData.IsNotNil() {
 		errorData = daos.ParserDatabaseError(ctx, errorData)
@@ -80,7 +80,7 @@ func (repo *MultiFactorAuthRepository) DeleteMultiFactorAuth(ctx context.Context
 	return errorData
 }
 
-func (repo *MultiFactorAuthRepository) ChangeStatus(ctx context.Context, userId uint, model dtos.MultiFactorAuthStatus) (errorData common.ErrorData) {
+func (repo *MultiFactorAuthRepository) ChangeStatus(ctx context.Context, userId string, model dtos.MultiFactorAuthStatus) (errorData common.ErrorData) {
 	columns := make(map[string]interface{})
 	columns["status"] = model.Status
 	columns["updated_at"] = model.UpdatedAt
@@ -95,7 +95,7 @@ func (repo *MultiFactorAuthRepository) ChangeStatus(ctx context.Context, userId 
 	return
 }
 
-func (repo *MultiFactorAuthRepository) GetUserMultiFactorAuth(ctx context.Context, userId uint) (result dtos.MultiFactorAuthDetail) {
+func (repo *MultiFactorAuthRepository) GetUserMultiFactorAuth(ctx context.Context, userId string) (result dtos.MultiFactorAuthDetail) {
 	repo.DB.WithContext(ctx).Table(daos.MultiFactorAuthTableName).Where("user_id = ?", userId).Find(&result)
 	return
 }

@@ -28,11 +28,11 @@ func (svc *UserAuthProfileService) ChangeStatus(ctx context.Context, model dtos.
 	errorData = svc.repo.ChangeStatus(ctx, model)
 	return
 }
-func (svc *UserAuthProfileService) GetUserAuthProfilesByUserId(ctx context.Context, userId uint) (results dtos.UserAuthProfileDetailList, errorData common.ErrorData) {
+func (svc *UserAuthProfileService) GetUserAuthProfilesByUserId(ctx context.Context, userId string) (results dtos.UserAuthProfileDetailList, errorData common.ErrorData) {
 	svc.init(ctx)
 	results, errorData = svc.repo.GetUserAuthProfilesByUserId(ctx, userId)
 	if errorData.IsNotNil() {
-		config.Logger.Errorf("getUserAuthProfile by user id: %d failed, err: %s", userId, errorData.Err.Error())
+		config.Logger.Errorf("getUserAuthProfile by user id: %s failed, err: %s", userId, errorData.Err.Error())
 	}
 	return results, errorData
 }
@@ -46,11 +46,11 @@ func (svc *UserAuthProfileService) GetUserAuthProfileByProviderAndId(ctx context
 	return result, errorData
 }
 
-func (svc *UserAuthProfileService) GetUserAuthProfileByID(ctx context.Context, id uint) (result dtos.UserAuthProfileDetail, errorData common.ErrorData) {
+func (svc *UserAuthProfileService) GetUserAuthProfileByID(ctx context.Context, id string) (result dtos.UserAuthProfileDetail, errorData common.ErrorData) {
 	svc.init(ctx)
 	result, errorData = svc.repo.GetUserAuthProfileByID(ctx, id)
 	if errorData.IsNotNil() {
-		config.Logger.Errorf("getUserAuthProfile by id: %d failed, err: %s", id, errorData.Err.Error())
+		config.Logger.Errorf("getUserAuthProfile by id: %s failed, err: %s", id, errorData.Err.Error())
 	}
 	return result, errorData
 }
@@ -95,7 +95,7 @@ func (svc *UserAuthProfileService) AddUserAuthProfile(ctx context.Context, model
 	return
 }
 
-func (svc *UserAuthProfileService) DeleteUserAuthProfile(ctx context.Context, ids []uint) (errorData common.ErrorData) {
+func (svc *UserAuthProfileService) DeleteUserAuthProfile(ctx context.Context, ids []string) (errorData common.ErrorData) {
 	svc.init(ctx)
 	errorData = svc.repo.DeleteUserAuthProfile(ctx, ids)
 	if errorData.IsNotNil() {
@@ -104,7 +104,7 @@ func (svc *UserAuthProfileService) DeleteUserAuthProfile(ctx context.Context, id
 	return
 }
 
-func (svc *UserAuthProfileService) DeleteUserAuthProfileByUserIds(ctx context.Context, userIds []uint) (errorData common.ErrorData) {
+func (svc *UserAuthProfileService) DeleteUserAuthProfileByUserIds(ctx context.Context, userIds []string) (errorData common.ErrorData) {
 	svc.init(ctx)
 	errorData = svc.repo.DeleteUserAuthProfileByUserIds(ctx, userIds)
 	if errorData.IsNotNil() {

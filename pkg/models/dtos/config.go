@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/efucloud/common"
+	"github.com/efucloud/eauth/pkg/utils"
 	"github.com/go-playground/validator/v10"
 	"strings"
 	"time"
@@ -20,7 +21,7 @@ type ConfigDetailList struct {
 // ConfigDetail 配置详情
 type ConfigDetail struct {
 	//主键
-	ID uint `gorm:"primarykey;column:id" json:"id" description:"记录ID"`
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"id" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"createdAt" description:"创建时间"`
 	//创建时间
@@ -39,6 +40,7 @@ type ConfigDetail struct {
 
 // ConfigCreate 配置创建
 type ConfigCreate struct {
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"-" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"-" description:"创建时间"`
 	//配置名称
@@ -55,7 +57,7 @@ type ConfigCreate struct {
 
 func (ins *ConfigCreate) Default(ctx context.Context) {
 	ins.CreatedAt = time.Now()
-
+	ins.ID = utils.GenerateDatabaseId()
 }
 func (ins *ConfigCreate) Validate(ctx context.Context) (err error) {
 	validate := validator.New()
@@ -81,7 +83,7 @@ func (ins *ConfigCreate) Validate(ctx context.Context) (err error) {
 // ConfigUpdate 配置修改
 type ConfigUpdate struct {
 	//主键
-	ID uint `gorm:"primarykey;column:id" json:"id" validate:"required" description:"记录ID"`
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"id" validate:"required" description:"记录ID"`
 	//创建时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"-" description:"更新时间"`
 	//配置名称

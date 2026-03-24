@@ -27,7 +27,7 @@ func (repo *UserRepository) GetUserByUsername(ctx context.Context, username stri
 		config.Logger.Error(errorData.Err)
 		errorData.ResponseCode = http.StatusInternalServerError
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
-	} else if result.ID == 0 {
+	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
 		errorData.Err = fmt.Errorf("not found account by username: %s", username)
@@ -79,7 +79,7 @@ func (repo *UserRepository) ResetUserPassword(ctx context.Context, model dtos.Us
 	}
 	return
 }
-func (repo *UserRepository) GetUsersByIds(ctx context.Context, ids []uint) (results dtos.UserDetailList, errorData common.ErrorData) {
+func (repo *UserRepository) GetUsersByIds(ctx context.Context, ids []string) (results dtos.UserDetailList, errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.UserTableName).Where("id IN (?)", ids).Find(&results.Data).Error
 	if errorData.IsNotNil() {
 		errorData = daos.ParserDatabaseError(ctx, errorData)
@@ -90,11 +90,11 @@ func (repo *UserRepository) GetUsersByIds(ctx context.Context, ids []uint) (resu
 	return
 }
 
-func (repo *UserRepository) UpdateUserMFa(ctx context.Context, userIds []uint, mfa bool) (errorData common.ErrorData) {
+func (repo *UserRepository) UpdateUserMFa(ctx context.Context, userIds []string, mfa bool) (errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.UserTableName).Where("id IN (?)", userIds).Update("mfa", mfa).Error
 	return
 }
-func (repo *UserRepository) UpdateUserAvatar(ctx context.Context, userId uint, avatarAddress string) (errorData common.ErrorData) {
+func (repo *UserRepository) UpdateUserAvatar(ctx context.Context, userId string, avatarAddress string) (errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.UserTableName).Where("id = ?", userId).Update("avatar", avatarAddress).Error
 	return
 }
@@ -106,7 +106,7 @@ func (repo *UserRepository) GetUserByPhone(ctx context.Context, phone string) (r
 		config.Logger.Error(errorData.Err)
 		errorData.ResponseCode = http.StatusInternalServerError
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
-	} else if result.ID == 0 {
+	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
 		errorData.Err = fmt.Errorf("not found account by phone: %s", phone)
@@ -122,7 +122,7 @@ func (repo *UserRepository) GetUserByEmail(ctx context.Context, email string) (r
 		config.Logger.Error(errorData.Err)
 		errorData.ResponseCode = http.StatusInternalServerError
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
-	} else if result.ID == 0 {
+	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
 		errorData.Err = fmt.Errorf("not found account by email: %s", email)
@@ -130,14 +130,14 @@ func (repo *UserRepository) GetUserByEmail(ctx context.Context, email string) (r
 	}
 	return
 }
-func (repo *UserRepository) GetUserByID(ctx context.Context, id uint) (result dtos.UserDetail, errorData common.ErrorData) {
+func (repo *UserRepository) GetUserByID(ctx context.Context, id string) (result dtos.UserDetail, errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.UserTableName).Where("id = ?", id).Find(&result).Error
 	if errorData.IsNotNil() {
 		errorData = daos.ParserDatabaseError(ctx, errorData)
 		config.Logger.Error(errorData.Err)
 		errorData.ResponseCode = http.StatusInternalServerError
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
-	} else if result.ID == 0 {
+	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
 		errorData.Err = fmt.Errorf("not found  user by id: %d", id)
@@ -177,7 +177,7 @@ func (repo *UserRepository) AddUser(ctx context.Context, model dtos.UserCreate) 
 	return result, errorData
 }
 
-func (repo *UserRepository) DeleteUser(ctx context.Context, ids []uint) (errorData common.ErrorData) {
+func (repo *UserRepository) DeleteUser(ctx context.Context, ids []string) (errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.UserTableName).Where("id IN (?)", ids).Delete(nil).Error
 	if errorData.IsNotNil() {
 		errorData = daos.ParserDatabaseError(ctx, errorData)

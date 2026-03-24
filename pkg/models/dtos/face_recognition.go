@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/efucloud/common"
+	"github.com/efucloud/eauth/pkg/utils"
 	"github.com/go-playground/validator/v10"
 	"strings"
 	"time"
@@ -20,7 +21,7 @@ type FaceRecognitionDetailList struct {
 // FaceRecognitionDetail 用户人脸识别信息详情
 type FaceRecognitionDetail struct {
 	//主键
-	ID uint `gorm:"primarykey;column:id" json:"id" description:"记录ID"`
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"id" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"createdAt" description:"创建时间"`
 	//创建时间
@@ -40,10 +41,11 @@ type FaceRecognitionDetail struct {
 
 // FaceRecognitionCreate 用户人脸识别信息创建
 type FaceRecognitionCreate struct {
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"-" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"-" description:"创建时间"`
 	//用户ID
-	UserId uint `gorm:"column:user_id" json:"userId" validate:"required" description:"本系统用户ID"`
+	UserId string `gorm:"column:user_id" json:"userId" validate:"required" description:"本系统用户ID"`
 	//是否有效
 	Enable bool `gorm:"column:enable;default:true" json:"enable" description:"是否有效"`
 	//录入名称
@@ -53,7 +55,8 @@ type FaceRecognitionCreate struct {
 }
 
 func (ins *FaceRecognitionCreate) Default(ctx context.Context) {
-
+	ins.CreatedAt = time.Now()
+	ins.ID = utils.GenerateDatabaseId()
 }
 func (ins *FaceRecognitionCreate) Validate(ctx context.Context) (err error) {
 	validate := validator.New()

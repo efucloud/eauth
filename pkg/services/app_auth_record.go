@@ -21,11 +21,11 @@ func (svc *AppAuthRecordService) init(ctx context.Context) {
 		svc.repo = repositories.AppAuthRecordRepository{DB: config.DBConnect}
 	}
 }
-func (svc *AppAuthRecordService) GetAppAuthRecordById(ctx context.Context, id uint) (result dtos.AppAuthRecordDetail, errorData common.ErrorData) {
+func (svc *AppAuthRecordService) GetAppAuthRecordById(ctx context.Context, id string) (result dtos.AppAuthRecordDetail, errorData common.ErrorData) {
 	svc.init(ctx)
 	result, errorData = svc.repo.GetAppAuthRecordById(ctx, id)
 	if errorData.IsNotNil() {
-		config.Logger.Errorf("get AppAuthRecord by id: %d failed, err: %s", id, errorData.Err.Error())
+		config.Logger.Errorf("get AppAuthRecord by id: %s failed, err: %s", id, errorData.Err.Error())
 	}
 	return result, errorData
 }
@@ -79,18 +79,18 @@ func (svc *AppAuthRecordService) AddAppAuthRecord(ctx context.Context, model dto
 	errorData.Err = model.Validate(ctx)
 	if errorData.IsNotNil() {
 		errorData.MsgCode = config.MsgCodeRequestDataInvalid
-		config.Logger.Errorf("application: %d user: %d create failed, err: %s", model.ApplicationId, model.UserId, errorData.Err.Error())
+		config.Logger.Errorf("application: %s user: %s create failed, err: %s", model.ApplicationId, model.UserId, errorData.Err.Error())
 		return
 	}
 	result, errorData = svc.repo.AddAppAuthRecord(ctx, model)
 	if errorData.IsNotNil() {
-		config.Logger.Errorf("application: %d user: %d create failed, err: %s", model.ApplicationId, model.UserId, errorData.Err.Error())
+		config.Logger.Errorf("application: %s user: %s create failed, err: %s", model.ApplicationId, model.UserId, errorData.Err.Error())
 	}
 
 	return
 }
 
-func (svc *AppAuthRecordService) DeleteAppAuthRecord(ctx context.Context, ids []uint) (errorData common.ErrorData) {
+func (svc *AppAuthRecordService) DeleteAppAuthRecord(ctx context.Context, ids []string) (errorData common.ErrorData) {
 	svc.init(ctx)
 	errorData = svc.repo.DeleteAppAuthRecord(ctx, ids)
 	if errorData.IsNotNil() {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/xml"
 	"errors"
+	"github.com/efucloud/eauth/pkg/utils"
 	"strings"
 	"time"
 
@@ -22,7 +23,7 @@ type ProviderSamlDetailList struct {
 // ProviderSamlDetail SAML提供商详情
 type ProviderSamlDetail struct {
 	//主键
-	ID uint `gorm:"primarykey;column:id" json:"id" description:"记录ID"`
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"id" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"createdAt" description:"创建时间"`
 	//更新时间
@@ -61,6 +62,7 @@ type ProviderSamlDetail struct {
 
 // ProviderSamlCreate SAML提供商创建
 type ProviderSamlCreate struct {
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"-" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"-" description:"创建时间"`
 	//提供商名称
@@ -97,6 +99,7 @@ type ProviderSamlCreate struct {
 
 func (ins *ProviderSamlCreate) Default(ctx context.Context) {
 	ins.CreatedAt = time.Now()
+	ins.ID = utils.GenerateDatabaseId()
 	applyProviderSamlDefaults(&ins.EntityId, &ins.SsoURL, &ins.Certificate, &ins.LoginIDAttr, &ins.LoginNameAttr, &ins.EmailAttr, &ins.PhoneAttr, &ins.NicknameAttr, &ins.AvatarAttr, ins.Metadata)
 }
 func (ins *ProviderSamlCreate) Validate(ctx context.Context) (err error) {
@@ -123,7 +126,7 @@ func (ins *ProviderSamlCreate) Validate(ctx context.Context) (err error) {
 // ProviderSamlUpdate SAML提供商修改
 type ProviderSamlUpdate struct {
 	//主键
-	ID uint `gorm:"primarykey;column:id" json:"id" validate:"required" description:"记录ID"`
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"id" validate:"required" description:"记录ID"`
 	//更新时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"-" description:"更新时间"`
 	//提供商名称

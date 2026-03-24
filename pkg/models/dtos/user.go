@@ -21,7 +21,7 @@ type UserDetailList struct {
 // ShortUser 简单账户详情
 type ShortUser struct {
 	//主键
-	ID uint `gorm:"primarykey;column:id" json:"id" description:"记录ID"`
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"id" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"createdAt" description:"创建时间"`
 	//用户名
@@ -49,7 +49,7 @@ type ShortUser struct {
 // UserDetail 账户详情
 type UserDetail struct {
 	//主键
-	ID uint `gorm:"primarykey;column:id" json:"id" description:"记录ID"`
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"id" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"createdAt" description:"创建时间"`
 	//创建时间
@@ -87,6 +87,7 @@ type UserDetail struct {
 // UserCreate 账户信息创建
 // 未来账户信息修改只能从eauth中
 type UserCreate struct {
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"-" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"-" description:"创建时间"`
 	//用户名
@@ -116,6 +117,7 @@ type UserCreate struct {
 }
 
 func (ins *UserCreate) Default(ctx context.Context) {
+	ins.ID = utils.GenerateDatabaseId()
 	ins.CreatedAt = time.Now()
 	if len(ins.Language) == 0 {
 		ins.Language = "zh"
@@ -150,7 +152,7 @@ func (ins *UserCreate) Validate(ctx context.Context) (err error) {
 // 账户禁用后，用户将不能登陆该系统
 type UserStatus struct {
 	//主键
-	Ids []uint `json:"ids" validate:"required" description:"主键"`
+	Ids []string `json:"ids" validate:"required" description:"主键"`
 	//更新时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"-" description:"更新时间"`
 	//是否有效
@@ -185,7 +187,7 @@ func (ins *UserStatus) Validate(ctx context.Context) (err error) {
 // 设置账户在系统中的角色
 type UserRole struct {
 	//主键
-	Ids []uint `json:"ids" validate:"required" description:"主键"`
+	Ids []string `json:"ids" validate:"required" description:"主键"`
 	//更新时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"-" description:"更新时间"`
 	//用户在系统中的角色
@@ -220,7 +222,7 @@ func (ins *UserRole) Validate(ctx context.Context) (err error) {
 // 更新账户信息，未来只能在eauth中更新
 type UserUpdate struct {
 	//主键
-	ID uint `gorm:"primarykey;column:id" json:"id" validate:"required" description:"记录ID"`
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"id" validate:"required" description:"记录ID"`
 	//创建时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"-" description:"更新时间"`
 	//用户名
@@ -261,7 +263,7 @@ func (ins *UserUpdate) Validate(ctx context.Context) (err error) {
 
 type SetPassword struct {
 	//主键
-	ID uint `gorm:"primarykey;column:id" json:"id" validate:"required" description:"记录ID"`
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"id" validate:"required" description:"记录ID"`
 	//密码
 	NewPassword string `json:"newPassword" validate:"required" description:"密码"`
 	//旧密码
@@ -271,7 +273,7 @@ type SetPassword struct {
 // UserResetPassword 账户修改密码
 type UserResetPassword struct {
 	//主键
-	ID uint `gorm:"primarykey;column:id" json:"id" validate:"required" description:"记录ID"`
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"id" validate:"required" description:"记录ID"`
 	//密码
 	Password string `json:"password" validate:"required" description:"密码"`
 	//密码强度

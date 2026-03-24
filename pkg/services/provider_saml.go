@@ -32,11 +32,11 @@ func (svc *ProviderSamlService) GetProviderSamlByCategory(ctx context.Context, c
 	return
 }
 
-func (svc *ProviderSamlService) GetProviderSamlById(ctx context.Context, id uint) (result dtos.ProviderSamlDetail, errorData common.ErrorData) {
+func (svc *ProviderSamlService) GetProviderSamlById(ctx context.Context, id string) (result dtos.ProviderSamlDetail, errorData common.ErrorData) {
 	svc.init(ctx)
 	result, errorData = svc.repo.GetProviderSamlById(ctx, id)
 	if errorData.IsNotNil() {
-		config.Logger.Errorf("getProviderSaml by id: %d failed, err: %s", id, errorData.Err.Error())
+		config.Logger.Errorf("getProviderSaml by id: %s failed, err: %s", id, errorData.Err.Error())
 	}
 	return
 }
@@ -82,7 +82,7 @@ func (svc *ProviderSamlService) AddProviderSaml(ctx context.Context, model dtos.
 	return
 }
 
-func (svc *ProviderSamlService) DeleteProviderSaml(ctx context.Context, ids []uint) (errorData common.ErrorData) {
+func (svc *ProviderSamlService) DeleteProviderSaml(ctx context.Context, ids []string) (errorData common.ErrorData) {
 	svc.init(ctx)
 	errorData = svc.repo.DeleteProviderSaml(ctx, ids)
 	if errorData.IsNotNil() {

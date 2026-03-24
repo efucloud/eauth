@@ -23,7 +23,7 @@ func (repo *ProviderSamlRepository) GetProviderSamlByCategory(ctx context.Contex
 		config.Logger.Error(errorData.Err)
 		errorData.ResponseCode = http.StatusInternalServerError
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
-	} else if result.ID == 0 {
+	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
 		errorData.Err = fmt.Errorf("not found provider saml by category: %s", category)
@@ -32,14 +32,14 @@ func (repo *ProviderSamlRepository) GetProviderSamlByCategory(ctx context.Contex
 	return
 }
 
-func (repo *ProviderSamlRepository) GetProviderSamlById(ctx context.Context, id uint) (result dtos.ProviderSamlDetail, errorData common.ErrorData) {
+func (repo *ProviderSamlRepository) GetProviderSamlById(ctx context.Context, id string) (result dtos.ProviderSamlDetail, errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.ProviderSamlTableName).Where("id = ?", id).Find(&result).Error
 	if errorData.IsNotNil() {
 		errorData = daos.ParserDatabaseError(ctx, errorData)
 		config.Logger.Error(errorData.Err)
 		errorData.ResponseCode = http.StatusInternalServerError
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
-	} else if result.ID == 0 {
+	} else if len(result.ID) == 0 {
 		errorData.MsgCode = config.MsgCodeGetRecordFailed
 		errorData.ResponseCode = http.StatusNotFound
 		errorData.Err = fmt.Errorf("not found provider saml by id: %d", id)
@@ -79,7 +79,7 @@ func (repo *ProviderSamlRepository) AddProviderSaml(ctx context.Context, model d
 	return result, errorData
 }
 
-func (repo *ProviderSamlRepository) DeleteProviderSaml(ctx context.Context, ids []uint) (errorData common.ErrorData) {
+func (repo *ProviderSamlRepository) DeleteProviderSaml(ctx context.Context, ids []string) (errorData common.ErrorData) {
 	errorData.Err = repo.DB.WithContext(ctx).Table(daos.ProviderSamlTableName).Where("id IN (?)", ids).Delete(nil).Error
 	if errorData.IsNotNil() {
 		errorData = daos.ParserDatabaseError(ctx, errorData)

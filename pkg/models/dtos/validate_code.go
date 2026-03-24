@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/efucloud/common"
+	"github.com/efucloud/eauth/pkg/utils"
 	"github.com/go-playground/validator/v10"
 	"strings"
 	"time"
@@ -20,13 +21,13 @@ type ValidateCodeDetailList struct {
 // ValidateCodeDetail 系统操作校验码详情
 type ValidateCodeDetail struct {
 	//主键
-	ID uint `gorm:"primarykey;column:id" json:"id" description:"记录ID"`
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"id" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"createdAt" description:"创建时间"`
 	//创建时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"updatedAt,omitempty" description:"更新时间"`
 	//用户ID
-	UserId uint `gorm:"column:user_id" json:"userId" description:"用户ID"`
+	UserId string `gorm:"column:user_id" json:"userId" description:"用户ID"`
 	//验证类型
 	Category string `gorm:"type:varchar(50);column:category" json:"category" validate:"oneof=phone email" enum:"phone|email" description:"验证类型"`
 	//验证码
@@ -39,10 +40,11 @@ type ValidateCodeDetail struct {
 
 // ValidateCodeCreate 系统操作校验码创建
 type ValidateCodeCreate struct {
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"-" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"-" description:"创建时间"`
 	//用户ID
-	UserId uint `gorm:"column:user_id" json:"userId" validate:"required" description:"用户ID"`
+	UserId string `gorm:"column:user_id" json:"userId" validate:"required" description:"用户ID"`
 	//验证类型
 	Category string `gorm:"type:varchar(50);column:category" json:"category" validate:"oneof=phone email" enum:"phone|email" description:"验证类型"`
 	//验证码
@@ -56,6 +58,7 @@ type ValidateCodeCreate struct {
 func (ins *ValidateCodeCreate) Default(ctx context.Context) {
 	ins.CreatedAt = time.Now()
 	ins.Expired = time.Now().Add(10 * time.Minute)
+	ins.ID = utils.GenerateDatabaseId()
 }
 func (ins *ValidateCodeCreate) Validate(ctx context.Context) (err error) {
 	validate := validator.New()

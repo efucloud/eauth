@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/efucloud/common"
+	"github.com/efucloud/eauth/pkg/utils"
 	"github.com/go-playground/validator/v10"
 	"strings"
 	"time"
@@ -20,7 +21,7 @@ type ProviderLdapDetailList struct {
 // ProviderLdapDetail LDAP提供商详情
 type ProviderLdapDetail struct {
 	//主键
-	ID uint `gorm:"primarykey;column:id" json:"id" description:"记录ID"`
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"id" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"createdAt" description:"创建时间"`
 	//创建时间
@@ -40,6 +41,7 @@ type ProviderLdapDetail struct {
 
 // ProviderLdapCreate LDAP提供商创建
 type ProviderLdapCreate struct {
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"-" description:"记录ID"`
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"-" description:"创建时间"`
 	//名称
@@ -59,6 +61,7 @@ type ProviderLdapCreate struct {
 
 func (ins *ProviderLdapCreate) Default(ctx context.Context) {
 	ins.CreatedAt = time.Now()
+	ins.ID = utils.GenerateDatabaseId()
 
 }
 func (ins *ProviderLdapCreate) Validate(ctx context.Context) (err error) {
@@ -85,7 +88,7 @@ func (ins *ProviderLdapCreate) Validate(ctx context.Context) (err error) {
 // ProviderLdapUpdate LDAP提供商修改
 type ProviderLdapUpdate struct {
 	//主键
-	ID uint `gorm:"primarykey;column:id" json:"id" validate:"required" description:"记录ID"`
+	ID string `gorm:"primarykey;column:id;type:varchar(50)" json:"id" validate:"required" description:"记录ID"`
 	//创建时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"-" description:"更新时间"`
 	//名称
@@ -97,7 +100,6 @@ type ProviderLdapUpdate struct {
 	Enable bool `gorm:"column:enable;default:true" json:"enable" description:"是否有效"`
 	//认证提供商
 	Provider string `gorm:"type:varchar(255)" json:"provider" validate:"oneof=ad openldap"  enum:"ad|openldap" description:"认证提供商"`
-
 	//LDAP配置
 	LdapConfig *LdapConfig `json:"ldapConfig" description:"LDAP配置"`
 }

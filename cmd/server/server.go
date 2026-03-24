@@ -53,7 +53,7 @@ func run(o *options.ServerRunOptions, stopCh <-chan struct{}) error {
 	userSvc := services.UserService{}
 	user, _ := userSvc.GetUserByUsername(ctx, config.AdminUsername)
 	config.SupperAdminID = user.ID
-	if config.SupperAdminID == 0 {
+	if len(config.SupperAdminID) == 0 {
 		var userCreate dtos.UserCreate
 		userCreate.Username = config.AdminUsername
 		userCreate.Nickname = "系统管理员"

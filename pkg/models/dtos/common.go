@@ -36,7 +36,7 @@ type TableListPagination struct {
 // AuthedUserInfo 用户信息
 type AuthedUserInfo struct {
 	//主键
-	ID uint `json:"id" validate:"required" description:"记录ID"`
+	ID string `json:"id" validate:"required" description:"记录ID"`
 	//用户名
 	Username string `json:"username" validate:"required,max=255" description:"用户名"`
 	//昵称，如中文名
@@ -88,7 +88,7 @@ type LoginByFaceIdData struct {
 }
 type ThirdAuthProfile struct {
 	//所属用户
-	UserId uint `json:"userId" description:"所属用户"`
+	UserId string `json:"userId" description:"所属用户"`
 	//认证提供商
 	Provider string `json:"provider" description:"所属用户"`
 	//第三方认证信息中的ID
@@ -112,7 +112,7 @@ type LoginByLDAP struct {
 	//自动登录,12小时，1周，15天,1个月，半年
 	RememberMe string `json:"rememberMe" enum:"12h|1w|15d|1m|0.5y" description:"自动登录,12小时，1周，15天,1个月，半年"`
 	//绑定的系统用户
-	BindId uint `json:"bindId" description:"绑定的系统用户或者组织用户"`
+	BindId string `json:"bindId" description:"绑定的系统用户或者组织用户"`
 	//用户名
 	Username string `json:"username" validate:"required" description:"用户名"`
 	//密码
@@ -222,7 +222,7 @@ type AccessTokenResponse struct {
 	IDToken      string `json:"id_token,omitempty" validate:"required"`
 	Timestamp    int64  `json:"timestamp,omitempty" validate:"required" description:"token有效时间"`
 	Need         bool   `json:"need,omitempty" description:"需要补充信息"`
-	ID           uint   `json:"id" description:"用户ID"`
+	ID           string `json:"id" description:"用户ID"`
 	Code         string `json:"code,omitempty" description:""`
 	Username     string `json:"username,omitempty" description:"默认用户名"`
 	Nickname     string `json:"nickname,omitempty" description:"昵称"`
@@ -237,7 +237,7 @@ type AccessTokenResponse struct {
 
 type UserClaims struct {
 	//系统用户ID
-	Id uint `json:"id" description:"系统用户ID"`
+	Id string `json:"string" description:"系统用户ID"`
 	// 用户名 组织内唯一必须由DNS-1123标签格式的单元组成
 	Username string `json:"username" description:"用户名"`
 	// 昵称，如中文名
@@ -405,7 +405,7 @@ type ResponseError struct {
 // BatchOperationIds 需要删除的列表,根据数据库id
 type BatchOperationIds struct {
 	//需要删key 可以为数据库的id
-	Ids []uint `json:"ids" validate:"required" description:"需要批量操作的数据库ID"`
+	Ids []string `json:"ids" validate:"required" description:"需要批量操作的数据库ID"`
 }
 
 // BatchOperationKeys 需要删除的列表，根据表唯一字符型字段
@@ -631,7 +631,7 @@ func CheckFaceIdData(userFaceIdDatas []ArrayFloat64, compareFaceIdData ArrayFloa
 
 type MfaCode struct {
 	//用户ID
-	UserId uint `gorm:"column:user_id" json:"userId" validate:"required" description:"用户ID"`
+	UserId string `gorm:"column:user_id" json:"userId" validate:"required" description:"用户ID"`
 	//验证码
 	Code string `json:"code" description:"验证码"`
 }
