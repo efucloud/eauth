@@ -237,7 +237,7 @@ type AccessTokenResponse struct {
 
 type UserClaims struct {
 	//系统用户ID
-	Id string `json:"string" description:"系统用户ID"`
+	Id string `json:"id" description:"系统用户ID"`
 	// 用户名 组织内唯一必须由DNS-1123标签格式的单元组成
 	Username string `json:"username" description:"用户名"`
 	// 昵称，如中文名

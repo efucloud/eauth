@@ -20,7 +20,7 @@ type Dashboard struct {
 type ApplicationAuthTop struct {
 	Name          string `json:"name" description:"应用名称"`
 	Code          string `json:"code" description:"应用编码"`
-	ApplicationId string `gorm:"column:application_id" json:"applicationId" description:"应用ID"`
+	ApplicationId string `gorm:"column:application_id;type:varchar(50)"  json:"applicationId" description:"应用ID"`
 	Value         int64  `json:"value" description:"认证数量"`
 	Home          string `json:"home" description:"应用主页"`
 	Description   string `json:"description" description:"描述"`

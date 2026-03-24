@@ -1,4 +1,4 @@
-package system
+package v1
 
 import (
 	"github.com/efucloud/eauth/pkg/apis/filters"

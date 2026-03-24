@@ -27,7 +27,7 @@ type ValidateCodeDetail struct {
 	//创建时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"updatedAt,omitempty" description:"更新时间"`
 	//用户ID
-	UserId string `gorm:"column:user_id" json:"userId" description:"用户ID"`
+	UserId string `gorm:"column:user_id;type:varchar(50);index" json:"userId" description:"用户ID"`
 	//验证类型
 	Category string `gorm:"type:varchar(50);column:category" json:"category" validate:"oneof=phone email" enum:"phone|email" description:"验证类型"`
 	//验证码
@@ -44,7 +44,7 @@ type ValidateCodeCreate struct {
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"-" description:"创建时间"`
 	//用户ID
-	UserId string `gorm:"column:user_id" json:"userId" validate:"required" description:"用户ID"`
+	UserId string `gorm:"column:user_id;type:varchar(50);index" json:"userId" validate:"required" description:"用户ID"`
 	//验证类型
 	Category string `gorm:"type:varchar(50);column:category" json:"category" validate:"oneof=phone email" enum:"phone|email" description:"验证类型"`
 	//验证码

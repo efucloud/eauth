@@ -13,7 +13,7 @@ type AppAuthRecord struct {
 	//创建时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"updatedAt,omitempty" description:"更新时间"`
 	//应用ID
-	ApplicationId uint `json:"applicationId" description:"应用ID"`
+	ApplicationId string `gorm:"column:application_id;type:varchar(50)" json:"applicationId" description:"应用ID"`
 	//响应编码 返回给浏览器客户端
 	Code string `gorm:"type:varchar(50);column:code;uniqueIndex" json:"code" validate:"required" description:"响应编码"`
 	//PKCE挑战值
@@ -21,7 +21,7 @@ type AppAuthRecord struct {
 	//PKCE挑战方式
 	CodeChallengeMethod string `gorm:"type:varchar(20);column:code_challenge_method" json:"codeChallengeMethod" description:"PKCE挑战方式"`
 	//用户ID
-	UserId uint `gorm:"column:user_id;index" json:"userId" validate:"required" description:"用户ID"`
+	UserId string `gorm:"column:user_id;type:varchar(50);index" json:"userId" validate:"required" description:"用户ID"`
 	//OIDC nonce
 	Nonce string `gorm:"type:varchar(255);column:nonce" json:"nonce" description:"OIDC nonce"`
 }

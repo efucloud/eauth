@@ -27,7 +27,7 @@ type UserTokenDetail struct {
 	//创建时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"updatedAt,omitempty" description:"更新时间"`
 	//用户ID
-	UserId string `gorm:"column:user_id" json:"userId" validate:"required" description:"用户ID"`
+	UserId string `gorm:"column:user_id;type:varchar(50);index" json:"userId" validate:"required" description:"用户ID"`
 	//用户
 	User ShortUser `gorm:"-" json:"user" description:"用户"`
 	//客户端ID
@@ -52,7 +52,7 @@ type UserTokenCreate struct {
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"-" description:"创建时间"`
 	//用户ID
-	UserId string `gorm:"column:user_id" json:"userId" validate:"required" description:"用户ID"`
+	UserId string `gorm:"column:user_id;type:varchar(50);index" json:"userId" validate:"required" description:"用户ID"`
 	//客户端ID
 	ClientId string `gorm:"type:varchar(255)" json:"clientId" validate:"required" description:"client ID"`
 	//过期时间(时间戳)
@@ -101,7 +101,7 @@ type UserTokenUpdate struct {
 	//创建时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"-" description:"更新时间"`
 	//用户ID
-	UserId uint `gorm:"column:user_id" json:"userId" validate:"required" description:"用户ID"`
+	UserId string `gorm:"column:user_id;type:varchar(50);index" json:"userId" validate:"required" description:"用户ID"`
 	//客户端ID
 	ClientId string `gorm:"type:varchar(255)" json:"clientId" validate:"required" description:"client ID"`
 	//过期时间(时间戳)

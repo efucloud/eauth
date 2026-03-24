@@ -2,7 +2,7 @@ package apis
 
 import (
 	"fmt"
-	"github.com/efucloud/eauth/pkg/apis/system"
+	v1 "github.com/efucloud/eauth/pkg/apis/v1"
 	"github.com/efucloud/eauth/pkg/embeds"
 	"github.com/efucloud/eauth/pkg/models/dtos"
 	"github.com/efucloud/eauth/pkg/services"
@@ -27,20 +27,20 @@ func GetWebServices(container *restful.Container) *restful.WebService {
 
 	})
 	ws.Consumes(restful.MIME_JSON).Produces(restful.MIME_JSON)
-	system.ApplicationResource{Svc: services.ApplicationService{}}.AddWebService(ws)
-	system.DashboardResource{Svc: services.DashboardService{}}.AddWebService(ws)
-	system.FaceRecognitionResource{Svc: services.FaceRecognitionService{}}.AddWebService(ws)
-	system.ProviderLdapResource{Svc: services.ProviderLdapService{}}.AddWebService(ws)
-	system.ProviderOidcResource{Svc: services.ProviderOidcService{}}.AddWebService(ws)
-	system.ProviderSamlResource{Svc: services.ProviderSamlService{}}.AddWebService(ws)
-	system.UserResource{Svc: services.UserService{}}.AddWebService(ws)
-	system.UserAuthProfileResource{Svc: services.UserAuthProfileService{}}.AddWebService(ws)
-	system.UserTokenResource{Svc: services.UserTokenService{}}.AddWebService(ws)
-	system.InfoResource{}.AddWebService(ws)
-	system.MultiFactorAuthResource{Svc: services.MultiFactorAuthService{}}.AddWebService(ws)
-	system.OAuthResource{Svc: services.OAuthService{}}.AddWebService(ws)
-	system.PersonalResource{}.AddWebService(ws)
-	system.SecurityResource{Svc: services.SecurityService{}}.AddWebService(ws)
+	v1.ApplicationResource{Svc: services.ApplicationService{}}.AddWebService(ws)
+	v1.DashboardResource{Svc: services.DashboardService{}}.AddWebService(ws)
+	v1.FaceRecognitionResource{Svc: services.FaceRecognitionService{}}.AddWebService(ws)
+	v1.ProviderLdapResource{Svc: services.ProviderLdapService{}}.AddWebService(ws)
+	v1.ProviderOidcResource{Svc: services.ProviderOidcService{}}.AddWebService(ws)
+	v1.ProviderSamlResource{Svc: services.ProviderSamlService{}}.AddWebService(ws)
+	v1.UserResource{Svc: services.UserService{}}.AddWebService(ws)
+	v1.UserAuthProfileResource{Svc: services.UserAuthProfileService{}}.AddWebService(ws)
+	v1.UserTokenResource{Svc: services.UserTokenService{}}.AddWebService(ws)
+	v1.InfoResource{}.AddWebService(ws)
+	v1.MultiFactorAuthResource{Svc: services.MultiFactorAuthService{}}.AddWebService(ws)
+	v1.OAuthResource{Svc: services.OAuthService{}}.AddWebService(ws)
+	v1.PersonalResource{}.AddWebService(ws)
+	v1.SecurityResource{Svc: services.SecurityService{}}.AddWebService(ws)
 
 	return ws
 }

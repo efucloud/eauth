@@ -27,7 +27,7 @@ type UserAuthProfileDetail struct {
 	//创建时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"updatedAt,omitempty" description:"更新时间"`
 	//用户ID
-	UserId string `gorm:"column:user_id" json:"userId" validate:"required" description:"本系统用户ID"`
+	UserId string `gorm:"column:user_id;type:varchar(50);index" json:"userId" validate:"required" description:"本系统用户ID"`
 	//认证类型provider中的code,email,phone
 	Provider string `gorm:"type:varchar(255);column:provider" json:"provider" description:"认证类型"`
 	//第三方登录用户的id，邮箱，手机号
@@ -55,7 +55,7 @@ type UserAuthProfileCreate struct {
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"-" description:"创建时间"`
 	//用户ID
-	UserId string `gorm:"column:user_id" json:"userId" validate:"required" description:"本系统用户ID"`
+	UserId string `gorm:"column:user_id;type:varchar(50);index" json:"userId" validate:"required" description:"本系统用户ID"`
 	//认证类型provider中的code,email,phone
 	Provider string `gorm:"type:varchar(255);column:provider" json:"provider" validate:"required" description:"认证类型"`
 	//第三方登录用户的id，邮箱，手机号
@@ -111,7 +111,7 @@ type UserAuthProfileUpdate struct {
 	//创建时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"-" description:"更新时间"`
 	//用户ID
-	UserId string `gorm:"column:user_id;type:varchar(50)" json:"userId" validate:"required" description:"本系统用户ID"`
+	UserId string `gorm:"column:user_id;type:varchar(50);index" json:"userId" validate:"required" description:"本系统用户ID"`
 	//第三方登录用户名
 	LoginName string `gorm:"type:varchar(255);column:login_name" json:"loginName" description:"第三方认证的用户名"`
 	//昵称

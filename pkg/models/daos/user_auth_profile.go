@@ -16,7 +16,7 @@ type UserAuthProfile struct {
 	//创建时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"updatedAt,omitempty" description:"更新时间"`
 	//用户ID
-	UserId uint `gorm:"column:user_id;index" json:"userId" validate:"required" description:"本系统用户ID"`
+	UserId string `gorm:"column:user_id;type:varchar(50);index" json:"userId" validate:"required" description:"本系统用户ID"`
 	//认证类型provider中的code,email,phone
 	Provider string `gorm:"type:varchar(255);column:provider" json:"provider" description:"认证类型"`
 	//第三方登录用户的id，邮箱，手机号

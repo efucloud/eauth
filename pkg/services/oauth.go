@@ -348,7 +348,7 @@ func (svc *OAuthService) GenerateBaseClaims(ctx context.Context, nowTime time.Ti
 	claims.Email = user.Email
 	claims.Phone = user.Phone
 	claims.ID = claimsID
-	claims.Subject = fmt.Sprintf("%d", user.ID)
+	claims.Subject = user.ID
 	claims.Audience = []string{}
 	if nonce := ctx.Value(config.RequestNonce); nonce != nil {
 		claims.Nonce = fmt.Sprintf("%v", nonce)

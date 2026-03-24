@@ -13,7 +13,7 @@ type MultiFactorAuth struct {
 	//创建时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"updatedAt,omitempty" description:"更新时间"`
 	//所属用户
-	UserId uint `gorm:"user_id;uniqueIndex" json:"userId" validate:"required" description:"所属用户"`
+	UserId string `gorm:"column:user_id;type:varchar(50);uniqueIndex" json:"userId" validate:"required" description:"所属用户"`
 	//密钥
 	Secret string `gorm:"type:longtext;column:secret" json:"secret" validate:"required" description:"密钥"`
 	//二维码

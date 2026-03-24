@@ -27,7 +27,7 @@ type MultiFactorAuthDetail struct {
 	//创建时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"updatedAt,omitempty" description:"更新时间"`
 	//所属用户
-	UserId string `gorm:"user_id" json:"userId" validate:"required" description:"所属用户"`
+	UserId string `gorm:"column:user_id;type:varchar(50);index" json:"userId" validate:"required" description:"所属用户"`
 	//密钥
 	Secret string `gorm:"type:varchar(50);column:secret" json:"secret" validate:"required" description:"密钥"`
 	//二维码
@@ -42,7 +42,7 @@ type MultiFactorAuthCreate struct {
 	//创建时间
 	CreatedAt time.Time `gorm:"autoCreateTime;column:created_at" json:"-" description:"创建时间"`
 	//所属用户
-	UserId string `gorm:"user_id" json:"userId" validate:"required" description:"所属用户"`
+	UserId string `gorm:"column:user_id;type:varchar(50);index" json:"userId" validate:"required" description:"所属用户"`
 	//密钥
 	Secret string `gorm:"type:varchar(50);column:secret" json:"secret" validate:"required" description:"密钥"`
 	//二维码

@@ -15,7 +15,7 @@ type FaceRecognition struct {
 	//创建时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"updatedAt,omitempty" description:"更新时间"`
 	//用户ID
-	UserId uint `gorm:"column:user_id" json:"userId" validate:"required" description:"本系统用户ID"`
+	UserId uint `gorm:"column:user_id;type:varchar(50);index" json:"userId" validate:"required" description:"本系统用户ID"`
 	//是否有效
 	Enable bool `gorm:"column:enable;default:true" json:"enable" description:"是否有效"`
 	//录入名称
