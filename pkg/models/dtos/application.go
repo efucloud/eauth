@@ -6,6 +6,7 @@ import (
 	"github.com/efucloud/common"
 	"github.com/efucloud/eauth/pkg/utils"
 	"github.com/go-playground/validator/v10"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -44,6 +45,8 @@ type ShortApplication struct {
 	ClientSecret string `gorm:"column:client_secret" json:"clientSecret,omitempty" validate:"required_if=Protocol oidc" description:"客户端密钥"`
 	//OIDC 回调地址
 	RedirectUri string `gorm:"type:varchar(1000);column:redirect_uri" json:"redirectUri" validate:"required" description:"回调地址"`
+	//OIDC 重定向地址匹配类型
+	RedirectUriMatchType string `gorm:"type:varchar(50);default:equal" json:"redirectUriMatchType"  validate:"oneof=regex equal prefix contain" enum:"regex|equal|prefix|contain"  description:"重定向地址匹配类型。regex:正则，all:全路径，prefix:前缀,contain:包含"`
 }
 
 // ApplicationDetail 普通应用详情
@@ -72,10 +75,30 @@ type ApplicationDetail struct {
 	ClientSecret string `gorm:"column:client_secret" json:"clientSecret,omitempty" validate:"required_if=Protocol oidc" description:"客户端密钥"`
 	//OIDC 回调地址
 	RedirectUri string `gorm:"type:varchar(1000);column:redirect_uri" json:"redirectUri" validate:"required" description:"回调地址"`
+	//OIDC 重定向地址匹配类型
+	RedirectUriMatchType string `gorm:"type:varchar(50);default:equal" json:"redirectUriMatchType"  validate:"oneof=regex equal prefix contain" enum:"regex|equal|prefix|contain"  description:"重定向地址匹配类型。regex:正则，all:全路径，prefix:前缀,contain:包含"`
 }
 
 func (ins *ApplicationDetail) RedirectUriMatch(redirectUri string) bool {
-	return ins.RedirectUri == redirectUri
+	switch ins.RedirectUriMatchType {
+	case "equal":
+		if ins.RedirectUri == redirectUri {
+			return true
+		}
+	case "prefix":
+		if strings.HasPrefix(redirectUri, ins.RedirectUri) {
+			return true
+		}
+	case "regex":
+		if match, _ := regexp.MatchString(ins.RedirectUri, redirectUri); match {
+			return true
+		}
+	case "contain":
+		if strings.Contains(redirectUri, ins.RedirectUri) {
+			return true
+		}
+	}
+	return false
 }
 
 // ApplicationCreate 普通应用创建
@@ -101,12 +124,17 @@ type ApplicationCreate struct {
 	ClientSecret string `gorm:"column:client_secret" json:"clientSecret,omitempty" validate:"required_if=Protocol oidc" description:"客户端密钥"`
 	//OIDC 回调地址
 	RedirectUri string `gorm:"type:varchar(1000);column:redirect_uri" json:"redirectUri" validate:"required" description:"回调地址"`
+	//OIDC 重定向地址匹配类型
+	RedirectUriMatchType string `gorm:"type:varchar(50);default:equal" json:"redirectUriMatchType"  validate:"oneof=regex equal prefix contain" enum:"regex|equal|prefix|contain"  description:"重定向地址匹配类型。regex:正则，all:全路径，prefix:前缀,contain:包含"`
 }
 
 func (ins *ApplicationCreate) Default(ctx context.Context) {
 	ins.ID = utils.GenerateDatabaseId()
 	ins.ClientId = common.NewSecureID(16)
 	ins.ClientSecret = common.NewSecureID(32)
+	if len(ins.RedirectUriMatchType) == 0 {
+		ins.RedirectUriMatchType = "equal"
+	}
 
 }
 func (ins *ApplicationCreate) Validate(ctx context.Context) (err error) {
@@ -150,10 +178,15 @@ type ApplicationUpdate struct {
 	Logo string `gorm:"type:varchar(1000);column:logo" json:"logo" description:"Logo"`
 	//OIDC 回调地址
 	RedirectUri string `gorm:"type:varchar(1000);column:redirect_uri" json:"redirectUri" validate:"required" description:"回调地址"`
+	//OIDC 重定向地址匹配类型
+	RedirectUriMatchType string `gorm:"type:varchar(50);default:equal" json:"redirectUriMatchType"  validate:"oneof=regex equal prefix contain" enum:"regex|equal|prefix|contain"  description:"重定向地址匹配类型。regex:正则，all:全路径，prefix:前缀,contain:包含"`
 }
 
 func (ins *ApplicationUpdate) Default(ctx context.Context) {
 	ins.UpdatedAt = time.Now()
+	if len(ins.RedirectUriMatchType) == 0 {
+		ins.RedirectUriMatchType = "equal"
+	}
 }
 func (ins *ApplicationUpdate) Validate(ctx context.Context) (err error) {
 	validate := validator.New()

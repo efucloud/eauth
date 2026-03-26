@@ -31,6 +31,8 @@ type Application struct {
 	ClientSecret string `gorm:"column:client_secret;uniqueIndex" json:"clientSecret,omitempty" validate:"required_if=Protocol oidc" description:"客户端密钥"`
 	//OIDC 回调地址
 	RedirectUri string `gorm:"type:varchar(1000);column:redirect_uri" json:"redirectUri" validate:"required" description:"回调地址"`
+	//OIDC 重定向地址匹配类型
+	RedirectUriMatchType string `gorm:"type:varchar(50);default:equal" json:"redirectUriMatchType"  validate:"oneof=regex equal prefix contain" enum:"regex|equal|prefix|contain"  description:"重定向地址匹配类型。regex:正则，all:全路径，prefix:前缀,contain:包含"`
 }
 
 func (app Application) TableName() string {
