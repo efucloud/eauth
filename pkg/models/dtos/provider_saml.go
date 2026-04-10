@@ -189,7 +189,7 @@ func (ins *ProviderSamlUpdate) Validate(ctx context.Context) (err error) {
 // ProviderSamlStatus 认证提供商状态
 type ProviderSamlStatus struct {
 	//主键
-	Ids []uint `json:"ids" validate:"required" description:"主键"`
+	Ids []string `json:"ids" validate:"required" description:"主键"`
 	//更新时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"-" description:"更新时间"`
 	//是否有效

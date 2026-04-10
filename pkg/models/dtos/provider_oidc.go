@@ -571,7 +571,7 @@ func (ins *ProviderOidcUpdate) Validate(ctx context.Context) (err error) {
 // 状态为disable时将不在用户前端显示
 type ProviderOidcStatus struct {
 	//主键
-	Ids []uint `json:"ids" validate:"required" description:"主键"`
+	Ids []string `json:"ids" validate:"required" description:"主键"`
 	//更新时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"-" description:"更新时间"`
 	//是否有效

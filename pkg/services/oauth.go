@@ -38,7 +38,7 @@ func (svc *OAuthService) ApplicationAuthCode(ctx context.Context, userId string,
 		codeChallengeMethodNormalized string
 	)
 	if model.ResponseType != "code" {
-		errorData.Err = fmt.Errorf("response_type  must be code ")
+		errorData.Err = fmt.Errorf("response_type must be code ")
 		return
 	}
 	codeChallenge, codeChallengeMethodNormalized, errorData.Err = normalizePKCEParams(model.GetCodeChallenge(), model.GetCodeChallengeMethod())
@@ -57,7 +57,7 @@ func (svc *OAuthService) ApplicationAuthCode(ctx context.Context, userId string,
 		return
 	}
 	if !app.RedirectUriMatch(model.RedirectUri) {
-		errorData.Err = fmt.Errorf("redirect_uri: %s is not right", model.RedirectUri)
+		errorData.Err = fmt.Errorf("rule: %s redirect_uri: %s is not right, database: %s ", app.RedirectUriMatchType, model.RedirectUri, app.RedirectUri)
 		return
 	}
 
@@ -627,10 +627,34 @@ func (svc *OAuthService) LoginByOIDC(ctx context.Context, loginParam dtos.LoginB
 	if errorData.IsNotNil() {
 		return
 	}
+
 	userSvc := UserService{}
+
+	if len(loginParam.BindId) > 0 {
+		user, errorData = userSvc.GetUserByID(ctx, loginParam.BindId)
+		if errorData.IsNotNil() {
+			return
+		}
+		authProfileSvc.AddUserAuthProfile(ctx, dtos.UserAuthProfileCreate{
+			UserId:         user.ID,
+			Provider:       loginParam.Provider,
+			LoginID:        profile.LoginID,
+			LoginName:      profile.Username,
+			Nickname:       profile.Nickname,
+			Enable:         true,
+			Avatar:         profile.Avatar,
+			Home:           profile.Home,
+			Properties:     profile.Properties,
+			LatestUsedTime: time.Now().Format(time.DateTime),
+		})
+	}
 
 	//判断是否存在以及是否允许自注册
 	if len(authedProfile.ID) > 0 {
+		user, errorData = userSvc.GetUserByID(ctx, authedProfile.UserId)
+		if errorData.IsNotNil() {
+			return
+		}
 		if !authedProfile.Enable {
 			errorData.Err = fmt.Errorf("forbiden authed by: %s", loginParam.Provider)
 			return
@@ -640,14 +664,11 @@ func (svc *OAuthService) LoginByOIDC(ctx context.Context, loginParam dtos.LoginB
 		authedProfile.Avatar = profile.Avatar
 		authedProfile.Home = profile.Home
 		authedProfile.Enable = true
+		authedProfile.UserId = user.ID
 		authedProfile.Properties = profile.Properties
 		var m dtos.UserAuthProfileUpdate
 		copyByJSON(authedProfile, &m)
 		authProfileSvc.UpdateUserAuthProfile(ctx, m)
-		user, errorData = userSvc.GetUserByID(ctx, authedProfile.UserId)
-		if errorData.IsNotNil() {
-			return
-		}
 	}
 
 	return svc.GenerateTokenResponse(ctx, true, config.ApplicationName, user)

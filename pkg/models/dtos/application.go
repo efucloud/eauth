@@ -80,6 +80,8 @@ type ApplicationDetail struct {
 }
 
 func (ins *ApplicationDetail) RedirectUriMatch(redirectUri string) bool {
+	ins.RedirectUri = strings.TrimSpace(ins.RedirectUri)
+	redirectUri = strings.TrimSpace(redirectUri)
 	switch ins.RedirectUriMatchType {
 	case "equal":
 		if ins.RedirectUri == redirectUri {
@@ -135,6 +137,7 @@ func (ins *ApplicationCreate) Default(ctx context.Context) {
 	if len(ins.RedirectUriMatchType) == 0 {
 		ins.RedirectUriMatchType = "equal"
 	}
+	ins.RedirectUri = strings.TrimSpace(ins.RedirectUri)
 
 }
 func (ins *ApplicationCreate) Validate(ctx context.Context) (err error) {
@@ -213,7 +216,7 @@ func (ins *ApplicationUpdate) Validate(ctx context.Context) (err error) {
 // 状态为disable时将不在用户前端显示，同时普通应用中的应用将不能认证
 type ApplicationStatus struct {
 	//主键
-	Ids []uint `json:"ids" validate:"required" description:"主键"`
+	Ids []string `json:"ids" validate:"required" description:"主键"`
 	//更新时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"-" description:"更新时间"`
 	//是否有效

@@ -25,19 +25,7 @@ func (r UserTokenResource) AddWebService(ws *restful.WebService) {
 	apiInfo.Description = "系统用户令牌"
 	common.RegisterApiInfo(apiInfo)
 	apiExtend := "/user-token"
-	ws.Route(ws.POST(config.V1Prefix+apiExtend).
-		Doc("创建系统用户令牌").
-		Notes("创建系统用户令牌信息").
-		Param(ws.HeaderParameter(config.AuthHeader, "系统用户Token")).
-		To(r.create).
-		Reads(dtos.UserTokenCreate{}).
-		Returns(http.StatusOK, "成功", dtos.UserTokenDetail{}).
-		Returns(http.StatusBadRequest, "请求数据无法处理", dtos.ResponseError{}).
-		Returns(http.StatusForbidden, "用户没有权限", dtos.ResponseError{}).
-		Returns(http.StatusInternalServerError, "内部处理逻辑错误", dtos.ResponseError{}).
-		Filter(filters.Log).Filter(filters.I18n).Filter(filters.Auth).
-		Metadata(restfulspec.KeyOpenAPITags, apiInfo.Tags()).
-		Metadata(config.FrontApiTag, "createUserToken"))
+
 	ws.Route(ws.GET(config.V1Prefix+apiExtend).
 		Doc("获取系统用户令牌列表").
 		Notes("获取系统用户令牌信息").
@@ -196,40 +184,6 @@ func (r UserTokenResource) delete(req *restful.Request, resp *restful.Response) 
 		return
 	}
 	common.ResponseSuccess(resp, "删除成功")
-}
-func (r UserTokenResource) create(req *restful.Request, resp *restful.Response) {
-	var (
-		errorData common.ErrorData
-		result    dtos.UserTokenDetail
-		model     dtos.UserTokenCreate
-	)
-	lang := common.GetLanguageFromReq(req, config.RequestLanguage)
-	errorData.Lang = lang
-	ctx := context.WithValue(context.Background(), config.RequestLanguage, lang)
-	if reqCtx := req.Attribute(config.RequestContext); reqCtx != nil {
-		ctx = reqCtx.(context.Context)
-	}
-	ctx = context.WithValue(ctx, config.RequestLanguage, lang)
-
-	errorData.Err = jsoniter.NewDecoder(req.Request.Body).Decode(&model)
-	if errorData.IsNotNil() {
-		config.Logger.Errorf("decode json format data failed, err: %s", errorData.Err.Error())
-		errorData.MsgCode = config.MsgCodeJsonDecodeFailed
-		errorData.ResponseCode = http.StatusBadRequest
-		errorData.Lang = lang
-		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
-		return
-	}
-	//判断系统用户令牌是否允许创建系统用户令牌
-	result, errorData = r.Svc.AddUserToken(ctx, model)
-	if errorData.IsNotNil() {
-		config.Logger.Errorf("add account failed, err: %s", errorData.Err.Error())
-		errorData.Lang = lang
-		common.ResponseErrorMessage(ctx, req, resp, config.Bundle, errorData)
-		return
-	}
-
-	common.ResponseSuccess(resp, result)
 }
 
 func (r UserTokenResource) update(req *restful.Request, resp *restful.Response) {

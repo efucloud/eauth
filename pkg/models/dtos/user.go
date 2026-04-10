@@ -308,6 +308,6 @@ func (ins *UserResetPassword) Validate(ctx context.Context) (err error) {
 
 type UserMfa struct {
 	//主键
-	Id  uint `gorm:"column:id" json:"id" description:"用户ID"`
-	MFA bool `gorm:"column:mfa" json:"mfa" description:"状态"`
+	Id  string `gorm:"column:id" json:"id" description:"用户ID"`
+	MFA bool   `gorm:"column:mfa" json:"mfa" description:"状态"`
 }

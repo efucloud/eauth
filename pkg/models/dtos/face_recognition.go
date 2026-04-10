@@ -82,7 +82,7 @@ func (ins *FaceRecognitionCreate) Validate(ctx context.Context) (err error) {
 // FaceRecognitionStatus 禁用后，用户将不能使用该认证方式登陆系统
 type FaceRecognitionStatus struct {
 	//主键
-	Ids []uint `json:"ids" validate:"required" description:"主键"`
+	Ids []string `json:"ids" validate:"required" description:"主键"`
 	//更新时间
 	UpdatedAt time.Time `gorm:"autoUpdateTime;column:updated_at" json:"-" description:"更新时间"`
 	//是否有效

@@ -160,6 +160,7 @@ func (t *RegisterByOIDC) Validate(ctx context.Context) (err error) {
 type LoginByOIDC struct {
 	RememberMe  string `json:"rememberMe" enum:"-|12h|1w|15d|1m|0.5y" description:"自动登录,12小时，1周，15天,1个月，半年"`
 	Code        string `json:"code" description:"OIDC提供商返回的Code"`
+	BindId      string `json:"bindId" description:"用户ID"`
 	Provider    string `json:"provider" validate:"required" description:"OIDC认证提供商"`
 	RedirectUri string `json:"redirectUri" description:"重定向地址"`
 }
