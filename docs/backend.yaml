@@ -58,7 +58,7 @@ spec:
     spec:
       containers:
         - name: eauth
-          image: registry.cn-shenzhen.aliyuncs.com/efucloud-public/eauth:v1.0.0.202603231923
+          image: ghcr.io/efucloud/eauth:latest
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
