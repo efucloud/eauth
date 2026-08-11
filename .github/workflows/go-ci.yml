@@ -32,16 +32,6 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "yarn"
-          cache-dependency-path: web/yarn.lock
-
-      - name: Enable Corepack
-        run: corepack enable
-
       - name: Check formatting
         run: |
           unformatted=$(gofmt -l cmd pkg config)
@@ -50,9 +40,6 @@ jobs:
             echo "$unformatted"
             exit 1
           fi
-
-      - name: Build and embed web assets
-        run: ./scripts/build-web-embed.sh
 
       - name: Run smoke tests
         run: go test ./cmd/... ./pkg/config/...
@@ -71,19 +58,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "yarn"
-          cache-dependency-path: web/yarn.lock
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Build and embed web assets
-        run: ./scripts/build-web-embed.sh
 
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v3

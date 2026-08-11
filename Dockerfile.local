@@ -1,5 +1,5 @@
 # 构建阶段
-FROM golang:1.26.4-alpine AS builder
+FROM registry.cn-shenzhen.aliyuncs.com/efucloud-public/tektoncd-golang:1.26.4 AS builder
 
 ARG TARGETOS
 ARG TARGETARCH
@@ -27,7 +27,7 @@ RUN case "$TARGETARCH" in \
       -o ./output/eauth-$TARGETOS-$TARGETARCH \
       ./cmd/start.go
 
-FROM alpine:3.23.0
+FROM registry.cn-shenzhen.aliyuncs.com/efucloud-public/alpine:3.23.0
 
 ARG TARGETOS
 ARG TARGETARCH
@@ -37,8 +37,6 @@ ARG BUILD_DATE
 LABEL org.opencontainers.image.source=https://github.com/efucloud/eauth
 LABEL org.opencontainers.image.revision=${GIT_COMMIT}
 LABEL org.opencontainers.image.created=${BUILD_DATE}
-LABEL com.efucloud.build.commit=${GIT_COMMIT}
-LABEL com.efucloud.build.date=${BUILD_DATE}
 
 WORKDIR /efucloud
 

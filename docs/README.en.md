@@ -2,23 +2,26 @@
 
 [中文](./README.md) | [English](./README.en.md)
 
-This guide corresponds to the following Kubernetes manifests:
+The deployment model is now split by service:
 
-- `docs/namespace.yaml`: Namespace (`efucloud`)
+- `docs/namespace.yaml`: namespace (`efucloud`)
 - `docs/mysql.yaml`: MySQL (PVC + ConfigMap + Deployment + Service)
-- `docs/backend.yaml`: Unified EAuth service (config Secret + Deployment + Service + optional Ingress)
+- `docs/backend.yaml`: EAuth backend (Secret + Deployment + Service)
+- `docs/frontend.yaml`: EAuth frontend console (Secret + Deployment + Service + Ingress)
 
 Default deployment namespace: `efucloud`.
 
 ## 1. Prerequisites
 
-- Kubernetes cluster is available and Ingress NGINX is installed (if domain access is needed).
-- Image pull credentials are prepared (for private registry).
-- A usable StorageClass exists (example: `mysql-local-retain`).
-- Update these settings before deployment:
+- Kubernetes is available.
+- Install Ingress NGINX if public domain access is required.
+- Prepare image pull credentials if you use a private registry.
+- Update these files before deployment:
   - `docs/mysql.yaml`: `MYSQL_ROOT_PASSWORD`, `MYSQL_DATABASE`
-  - `docs/backend.yaml`: `mysql`, `email`, and `serverAddress` under `Secret.stringData.config.yaml`
-  - `docs/backend.yaml`: if you need domain access, also update the Ingress host, IngressClass, and TLS secret
+  - `docs/backend.yaml`: `mysql`, `email`, and `serverAddress` in `Secret.stringData.config.yaml`
+  - `docs/frontend.yaml`: frontend image, domain, TLS settings, and Nginx proxy settings
+
+`serverAddress` should be the public frontend URL, not the backend Service address.
 
 ## 2. Recommended Apply Order
 
@@ -26,54 +29,46 @@ Default deployment namespace: `efucloud`.
 kubectl apply -f docs/namespace.yaml
 kubectl apply -f docs/mysql.yaml
 kubectl apply -f docs/backend.yaml
-kubectl port-forward -n efucloud svc/eauth 9001:80
+kubectl apply -f docs/frontend.yaml
 ```
 
-You can also apply all manifests at once:
+Once environment-specific values are updated, you can also apply everything at once:
 
 ```bash
 kubectl apply -f docs/
 ```
 
-## 3. Status Checks
+## 3. Access Model
+
+- Backend Service: `eauth.efucloud.svc.cluster.local:9001`
+- Frontend Service: `eauth-console.efucloud.svc.cluster.local:80`
+- Public entrypoint: the Ingress defined in `docs/frontend.yaml`
+
+For local verification, use port-forwarding:
+
+```bash
+kubectl -n efucloud port-forward svc/eauth 9001:9001
+kubectl -n efucloud port-forward svc/eauth-console 8000:80
+```
+
+## 4. Status Checks
 
 ```bash
 kubectl -n efucloud get pods,svc,deploy,ingress
-```
-
-Backend logs:
-
-```bash
 kubectl -n efucloud logs -f deploy/eauth
+kubectl -n efucloud logs -f deploy/eauth-console
 ```
 
-## 4. Connectivity Verification
+## 5. Connectivity Verification
 
-Unified service access inside the cluster:
-
-- `http://eauth.efucloud.svc.cluster.local`
-
-After local port-forward:
-
-- Console root: `http://127.0.0.1:9001/`
-- Health check: `http://127.0.0.1:9001/api/health`
+- Frontend home: `http://127.0.0.1:8000`
+- Backend health check: `http://127.0.0.1:9001/api/health`
 - OpenAPI: `http://127.0.0.1:9001/api/v1/swagger.json`
-- OIDC metadata: `http://127.0.0.1:9001/api/.well-known/openid-configuration`
+- OIDC metadata: access `/.well-known/openid-configuration` through the frontend domain
 
-Health check endpoints:
+## 6. Production Recommendations
 
-- `GET /api/health`
-- `GET /api/v1/swagger.json`
-- `GET /metrics`
-
-If you apply the optional Ingress in `docs/backend.yaml`, the frontend can also be accessed directly from the root path:
-
-- `GET /`
-- `GET /.well-known/openid-configuration` (compatibility routing handled by Ingress)
-
-## 5. Production Recommendations
-
-- Service config is currently managed with `Secret.stringData`; consider external secret management (for example SealedSecrets or External Secrets).
-- For MySQL, prefer a dedicated instance or StatefulSet and enable backup policies.
-- For `uploads`, use PVC or object storage to avoid data loss during pod rescheduling.
-- Enforce TLS on Ingress and add observability (access logs, error logs, alerting).
+- Backend config is currently managed through `Secret.stringData`; consider SealedSecrets or External Secrets.
+- Use PVC or object storage for `uploads` to avoid data loss after pod rescheduling.
+- Prefer a dedicated MySQL instance or StatefulSet with backups enabled.
+- Enforce TLS on the frontend Ingress and restrict CORS to trusted domains.

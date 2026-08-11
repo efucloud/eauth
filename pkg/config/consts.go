@@ -23,9 +23,6 @@ const (
 	RequestFormData = "multipart/form-data"
 )
 const (
-	ProtocolOIDC           = "oidc"
-	ProtocolSaml2          = "saml2"
-	ProtocolCas3           = "cas3"
 	ProviderOidcGitlab     = "gitlab"
 	ProviderOidcGithub     = "github"
 	ProviderOidcGoogle     = "google"
@@ -60,15 +57,11 @@ const (
 	ApplicationName = "eauth"
 )
 const (
-	CookiePrefix           = "tenant"
-	RequestUserID          = "RequestUserID"
-	RequestLanguage        = "RequestLanguage"
-	RequestUserAgentHeader = "X-Agent"
-	RequestContext         = "RequestContext"
-	RequestNonce           = "RequestNonce"
-	RequestRemote          = "RequestRemote"
-	AuthHeader             = "Authorization"
-	XApiKey                = "X--ApiKey"
+	RequestUserID   = "RequestUserID"
+	RequestLanguage = "RequestLanguage"
+	RequestContext  = "RequestContext"
+	RequestNonce    = "RequestNonce"
+	AuthHeader      = "Authorization"
 )
 
 const (
@@ -79,23 +72,6 @@ const (
 	GrantTypePassword          = "password"
 	GrantTypeImplicit          = "implicit"
 	GrantTypeDeviceCode        = "urn:ietf:params:oauth:grant-type:device_code"
-)
-const (
-	CaptchaClickBasic  = "ClickBasic"
-	CaptchaClickShapes = "ClickShapes"
-	CaptchaSlideBasic  = "SlideBasic"
-	CaptchaSlideRegion = "SlideRegion"
-	CaptchaRotateBasic = "RotateBasic"
-)
-
-// 应用访问策略
-const (
-	//黑名单
-	ApplicationAccessPolicyBlacklist = "blacklist"
-	//白名单
-	ApplicationAccessPolicyWhitelist = "whitelist"
-	//不限制
-	ApplicationAccessPolicyNone = "none"
 )
 
 // 系统配置的key

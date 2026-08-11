@@ -4,12 +4,6 @@
 .idea
 .vscode
 
-web/node_modules
-web/dist
-web/.umi
-web/.umi-production
-web/.cache
-
 tmp
 test
 log

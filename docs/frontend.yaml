@@ -1,0 +1,182 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eauth-console
+  namespace: efucloud
+  labels:
+    app: eauth-console
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eauth-console
+  template:
+    metadata:
+      labels:
+        app: eauth-console
+    spec:
+      volumes:
+        - name: nginx-conf
+          secret:
+            secretName: eauth-console
+            defaultMode: 420
+      containers:
+        - name: console
+          image: registry.cn-shenzhen.aliyuncs.com/efucloud-public/eauth-console:v1.0.0.202603161721
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          env:
+            - name: TZ
+              value: Asia/Shanghai
+          resources: {}
+          volumeMounts:
+            - name: nginx-conf
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: IfNotPresent
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: eauth-console
+  namespace: efucloud
+type: Opaque
+stringData:
+  nginx.conf: |
+    user  root;
+    worker_processes  1;
+    error_log  /dev/stderr warn;
+    events {
+        worker_connections  1024;
+    }
+
+    http {
+        client_max_body_size 2000m;
+
+        include       mime.types;
+        default_type  application/octet-stream;
+
+        gzip on;
+        gzip_disable "msie6";
+        gzip_vary on;
+        gzip_proxied any;
+        gzip_comp_level 6;
+        gzip_buffers 16 8k;
+        gzip_http_version 1.1;
+        gzip_min_length 256;
+        gzip_types
+            text/plain
+            text/css
+            application/json
+            application/x-javascript
+            text/xml
+            application/xml
+            application/xml+rss
+            text/javascript
+            application/vnd.ms-fontobject
+            application/x-font-ttf
+            font/opentype
+            image/svg+xml
+            image/x-icon
+            application/javascript
+            image/webp;
+
+        add_header Access-Control-Allow-Origin *;
+        add_header Access-Control-Allow-Methods *;
+        add_header Access-Control-Allow-Headers *;
+        add_header Access-Control-Allow-Credentials true;
+        add_header Access-Control-Max-Age 3600;
+
+        client_header_buffer_size 16k;
+        large_client_header_buffers 4 64k;
+
+        log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                        '$status $body_bytes_sent "$http_referer" '
+                        '"$http_user_agent" "$http_x_forwarded_for" [$request_time $upstream_response_time] ';
+
+        access_log /dev/stdout main;
+        error_log  /dev/stderr warn;
+
+        sendfile        on;
+        keepalive_timeout  65;
+
+        proxy_connect_timeout 300;
+        proxy_send_timeout    300;
+        proxy_read_timeout    300;
+
+        server {
+            listen       80;
+            server_name  eauth-demo.efucloud.com _;
+            underscores_in_headers on;
+
+            location / {
+                root   /usr/share/nginx/html;
+                index  index.html index.htm;
+                try_files $uri $uri/ /index.html;
+            }
+
+            location /api/ {
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+                proxy_set_header Host $host;
+                proxy_set_header X-Forwarded-Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_pass http://eauth:9001/api/;
+                proxy_cookie_path / /;
+            }
+
+            location /.well-known/openid-configuration {
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+                proxy_set_header Host $host;
+                proxy_set_header X-Forwarded-Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_pass http://eauth:9001/api/.well-known/openid-configuration;
+                proxy_cookie_path / /;
+            }
+        }
+    }
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: eauth-console
+  namespace: efucloud
+  labels:
+    app: eauth-console
+spec:
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 80
+  selector:
+    app: eauth-console
+  type: ClusterIP
+---
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: eauth-ingress-frontend
+  namespace: efucloud
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: eauth-demo.efucloud.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: eauth-console
+                port:
+                  number: 80

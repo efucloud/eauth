@@ -4,6 +4,9 @@
 
 EAuth is a unified authentication platform for enterprise scenarios, positioned similarly to Auth0 and Dex.  
 It can act as an OIDC identity provider for business systems and can also integrate with external third-party identity platforms to provide a consistent login experience and centralized authentication policy.
+## Frontend Repository
+
+https://github.com/efucloud/eauth-console
 
 ## Project Background
 
@@ -32,26 +35,18 @@ The current codebase already supports categorized provider registration and disp
 ## Directory Overview
 
 - `cmd/`: service entrypoints
-- `web/`: frontend source
 - `pkg/apis/`: API layer
 - `pkg/services/`: business logic
 - `pkg/providers/`: third-party auth integrations
-- `pkg/embeds/web/`: embedded frontend build output
 - `config/`: local runtime configuration
 - `docs/`: deployment manifests and docs
 
 ## Quick Start (Local)
 
-### Requirements
-
 - Go `1.26.x`
-- Node.js `20.x`
-- Yarn `1.x`
 - MySQL `8.x` or a compatible version
 
-### Startup Steps
-
-1. Start a local MySQL instance and create the `eauth` database
+### 1. Start MySQL
 
 If MySQL is not installed locally, you can use Docker:
 
@@ -64,43 +59,41 @@ docker run -d \
   mysql:8
 ```
 
-2. Review and update `config/config.yaml` if needed
+### 2. Update backend config
 
 At minimum, confirm these fields:
 
-- `serverAddress: http://localhost:9001`
+- `serverAddress: http://localhost:8000`
 - `mysql.host: localhost:3306`
 - `mysql.user: root`
 - `mysql.password: EfuCloud`
 - `mysql.dbname: eauth`
 
-3. Build and embed the frontend assets:
-
-```bash
-./scripts/build-web-embed.sh
-```
-
-Or:
-
-```bash
-make embed-web
-```
-
-4. Start the unified service:
+### 3. Start backend
 
 ```bash
 go run ./cmd -c ./config/config.yaml
 ```
 
-Default service port: `9001`.
-After startup, the backend serves both the API and the embedded frontend UI.
+The backend listens on `9001`.
+
+### 4. Start frontend
+
+```bash
+git clone https://github.com/efucloud/eauth-console.git
+cd eauth-console
+yarn install --frozen-lockfile
+yarn start:dev
+```
+
+The frontend listens on `8000` and proxies API requests to the backend on `9001`.
 
 ### Access URLs
 
-- Home page: `http://127.0.0.1:9001/`
+- Home page: `http://127.0.0.1:8000/`
 - Health check: `http://127.0.0.1:9001/api/health`
 - OpenAPI: `http://127.0.0.1:9001/api/v1/swagger.json`
-- OIDC metadata: `http://127.0.0.1:9001/api/.well-known/openid-configuration`
+- OIDC metadata: `http://127.0.0.1:8000/.well-known/openid-configuration`
 
 ### Default Admin Account
 
@@ -111,7 +104,7 @@ On first startup, the service creates a default administrator:
 
 ## Local Development
 
-### Backend Development
+### Backend only
 
 If you only need to work on backend APIs, you can start the service directly:
 
@@ -119,56 +112,18 @@ If you only need to work on backend APIs, you can start the service directly:
 go run ./cmd -c ./config/config.yaml
 ```
 
-If you changed frontend code and want the backend to keep serving the latest UI, re-run:
+This is enough for API development, but the UI must be started from the `eauth-console` repository.
+
+### Full-stack local development
+
+Start the backend in this repository first, then run in the frontend repository:
 
 ```bash
-./scripts/build-web-embed.sh
-```
-
-### Unified Local Preview
-
-If you want the backend to serve the frontend UI locally, run:
-
-```bash
-./scripts/build-web-embed.sh
-```
-
-This script does three things:
-
-- installs frontend dependencies under `web/`
-- builds the frontend into `web/dist`
-- syncs the build output into `pkg/embeds/web/` so the Go service can embed and serve it
-
-Use it when:
-
-- you have just cloned the repository and want the local backend to serve the UI
-- you changed frontend code under `web/` and need fresh embedded assets
-- you are preparing a local or release image build and need the embedded assets up to date
-
-After frontend changes, re-run:
-
-```bash
-./scripts/build-web-embed.sh
-go run ./cmd -c ./config/config.yaml
-```
-
-### Frontend-Only Development
-
-If you only want to work on the frontend UI, you can start the frontend dev server separately:
-
-```bash
-cd web
 yarn install --frozen-lockfile
 yarn start:dev
 ```
 
-For integrated testing, make sure the backend is also running locally on port `9001`.
-
-### Frontend Paths
-
-- frontend source: `web/`
-- frontend build output: `web/dist/`
-- backend embedded assets: `pkg/embeds/web/`
+Recommended local setup: backend on `9001`, frontend on `8000`.
 
 ## Configuration
 
@@ -194,18 +149,12 @@ go run ./cmd -c ./config/config.prod.yaml
 - `email.*`: email service settings (verification codes, notifications)
 - `logConfig.*`: logging output and rotation settings
 
-### Frontend Integration
-
-- Frontend source lives under `web/`
-- Production images and the local unified service serve the UI from `pkg/embeds/web/`
-- Files under `pkg/embeds/web/` are generated build artifacts; the repository only keeps the `.ignore` placeholder
-
 ### Minimal Example
 
 ```yaml
-# serverAddress should be the public URL of the unified service and is used for
+# serverAddress should be the frontend URL and is used for
 # .well-known/openid-configuration and other OIDC metadata
-serverAddress: "http://localhost:9001"
+serverAddress: "http://localhost:8000"
 tokenPeriod: 16
 uploadPath: "./uploads"
 
@@ -239,6 +188,7 @@ Deployment manifests are provided:
 
 - `docs/namespace.yaml`
 - `docs/mysql.yaml`
-- `docs/backend.yaml`: unified service Deployment + Service + optional Ingress
+- `docs/backend.yaml`
+- `docs/frontend.yaml`
 
 Deployment guide: `docs/README.en.md`.

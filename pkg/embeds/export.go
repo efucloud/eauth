@@ -7,9 +7,6 @@ import (
 	"net/http"
 )
 
-//go:embed all:web
-var WebFiles embed.FS
-
 //go:embed templates
 var Templates embed.FS
 

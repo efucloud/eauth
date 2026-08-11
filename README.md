@@ -4,6 +4,7 @@
 
 EAuth 是一个面向企业场景的统一认证系统，定位类似 Auth0 / Dex 的认证能力平台。  
 它既可以作为业务系统的 OIDC 认证中心，也支持对接外部第三方认证平台，统一账号登录体验与认证策略。
+## 前端仓库地址：https://github.com/efucloud/eauth-console
 ## 项目背景
 
 在多系统、多组织、多终端并存的环境下，认证体系往往面临以下问题：
@@ -32,26 +33,18 @@ EAuth 的目标是提供一套可扩展、可落地的认证基础设施，降�
 ## 目录说明
 
 - `cmd/`：启动入口
-- `web/`：前端源码
 - `pkg/apis/`：API 层
 - `pkg/services/`：业务逻辑
 - `pkg/providers/`：第三方认证接入实现
-- `pkg/embeds/web/`：前端构建后的嵌入静态资源目录
 - `config/`：本地运行配置
 - `docs/`：部署与文档
 
 ## 快速开始（本地）
 
-### 环境要求
-
 - Go `1.26.x`
-- Node.js `20.x`
-- Yarn `1.x`
 - MySQL `8.x` 或兼容版本
 
-### 启动步骤
-
-1. 启动本地 MySQL，并创建 `eauth` 数据库
+### 1. 启动 MySQL
 
 如果本机没有 MySQL，可以直接用 Docker：
 
@@ -64,43 +57,41 @@ docker run -d \
   mysql:8
 ```
 
-2. 检查并按需修改 `config/config.yaml`
+### 2. 修改后端配置
 
 本地最少需要确认这些字段：
 
-- `serverAddress: http://localhost:9001`
+- `serverAddress: http://localhost:8000`
 - `mysql.host: localhost:3306`
 - `mysql.user: root`
 - `mysql.password: EfuCloud`
 - `mysql.dbname: eauth`
 
-3. 构建并嵌入前端静态资源
-
-```bash
-./scripts/build-web-embed.sh
-```
-
-也可以使用：
-
-```bash
-make embed-web
-```
-
-4. 启动统一服务
+### 3. 启动后端
 
 ```bash
 go run ./cmd -c ./config/config.yaml
 ```
 
-默认服务端口为 `9001`。
-启动后，后端会同时提供 API 和嵌入后的前端页面。
+后端默认监听 `9001`。
+
+### 4. 启动前端
+
+```bash
+git clone https://github.com/efucloud/eauth-console.git
+cd eauth-console
+yarn install --frozen-lockfile
+yarn start:dev
+```
+
+前端默认监听 `8000`，并通过代理访问本地 `9001` 端口的后端。
 
 ### 启动后访问
 
-- 首页：`http://127.0.0.1:9001/`
+- 首页：`http://127.0.0.1:8000/`
 - 健康检查：`http://127.0.0.1:9001/api/health`
 - OpenAPI：`http://127.0.0.1:9001/api/v1/swagger.json`
-- OIDC Metadata：`http://127.0.0.1:9001/api/.well-known/openid-configuration`
+- OIDC Metadata：`http://127.0.0.1:8000/.well-known/openid-configuration`
 
 ### 默认管理员账号
 
@@ -111,7 +102,7 @@ go run ./cmd -c ./config/config.yaml
 
 ## 本地开发说明
 
-### 后端开发
+### 仅运行后端
 
 如果只调试后端 API，可以直接启动：
 
@@ -119,56 +110,18 @@ go run ./cmd -c ./config/config.yaml
 go run ./cmd -c ./config/config.yaml
 ```
 
-如果改了前端代码并希望后端继续直接提供页面，需要重新执行：
+此时可直接调试 API，但前端页面需要在 `eauth-console` 仓库单独启动。
+
+### 前后端联调
+
+建议先启动本仓库中的后端，再在前端仓库中执行：
 
 ```bash
-./scripts/build-web-embed.sh
-```
-
-### 前后端一体化本地预览
-
-如果需要通过后端直接访问前端页面，需要先执行：
-
-```bash
-./scripts/build-web-embed.sh
-```
-
-这个脚本会完成三件事：
-
-- 在 `web/` 下安装前端依赖
-- 构建前端产物到 `web/dist`
-- 将构建结果同步到 `pkg/embeds/web/`，供 Go 服务直接嵌入并对外提供
-
-适用场景：
-
-- 首次拉取仓库后，需要让本地后端带上前端页面一起启动
-- 修改了 `web/` 下的前端代码后，需要重新生成嵌入资源
-- 在构建本地镜像或发布镜像前，需要确保嵌入资源是最新的
-
-前端代码有变更时，重新执行一次即可：
-
-```bash
-./scripts/build-web-embed.sh
-go run ./cmd -c ./config/config.yaml
-```
-
-### 前端单独开发
-
-如果只想调试前端页面，也可以单独启动前端开发服务器：
-
-```bash
-cd web
 yarn install --frozen-lockfile
 yarn start:dev
 ```
 
-默认会启动前端开发服务。联调时请确保后端也已经在本地 `9001` 端口运行。
-
-### 前端源码位置
-
-- 前端源码目录：`web/`
-- 前端构建输出目录：`web/dist/`
-- 后端嵌入资源目录：`pkg/embeds/web/`
+联调时保持后端为 `9001`、前端为 `8000`。
 
 ## 配置文件说明
 
@@ -194,17 +147,11 @@ go run ./cmd -c ./config/config.prod.yaml
 - `email.*`：邮件服务参数（验证码、通知等）
 - `logConfig.*`：日志输出与滚动策略
 
-### 前端集成说明
-
-- 前端源码位于 `web/`
-- 生产镜像和本地统一服务都通过 `pkg/embeds/web/` 提供前端页面
-- `pkg/embeds/web/` 下的文件属于构建产物，仓库只保留占位文件 `.ignore`
-
 ### 示例（最小可用）
 
 ```yaml
-# serverAddress 为统一服务对外地址，用于 .well-known/openid-configuration 等元数据生成
-serverAddress: "http://localhost:9001"
+# serverAddress 为前端地址，为 .well-known/openid-configuration 等元数据生成提供地址信息
+serverAddress: "http://localhost:8000"
 tokenPeriod: 16
 uploadPath: "./uploads"
 
@@ -239,5 +186,6 @@ email:
 - 部署清单：
   - `docs/namespace.yaml`
   - `docs/mysql.yaml`
-  - `docs/backend.yaml`：统一服务 Deployment + Service + 可选 Ingress
+  - `docs/backend.yaml`
+  - `docs/frontend.yaml`
 - 使用说明：`docs/README.md`

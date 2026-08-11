@@ -1,5 +1,5 @@
 # 构建阶段
-FROM registry.cn-shenzhen.aliyuncs.com/efucloud-public/golang:1.26.4 AS builder
+FROM registry.cn-shenzhen.aliyuncs.com/efucloud-public/tektoncd-golang:1.26.4 AS builder
 
 # buildx 自动传入的跨平台参数（无需手动传）
 ARG TARGETOS
@@ -43,8 +43,6 @@ ARG BUILD_DATE
 LABEL org.opencontainers.image.source=https://github.com/efucloud/eauth
 LABEL org.opencontainers.image.revision=${GIT_COMMIT}
 LABEL org.opencontainers.image.created=${BUILD_DATE}
-LABEL com.efucloud.build.commit=${GIT_COMMIT}
-LABEL com.efucloud.build.date=${BUILD_DATE}
 
 WORKDIR /efucloud
 

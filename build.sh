@@ -25,8 +25,6 @@ echo "Dockerfile: ${DOCKERFILE}"
 echo "Git commit: ${GIT_COMMIT}"
 echo "Build date: ${BUILD_DATE}"
 
-"${ROOT_DIR}/scripts/build-web-embed.sh"
-
 docker buildx build \
   -f "${ROOT_DIR}/${DOCKERFILE}" \
   --platform "${PLATFORMS}" \

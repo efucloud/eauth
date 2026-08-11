@@ -2,23 +2,26 @@
 
 [中文](./README.md) | [English](./README.en.md)
 
-本文档对应以下 Kubernetes 清单：
+当前部署模型为前后端分离：
 
 - `docs/namespace.yaml`：命名空间（`efucloud`）
 - `docs/mysql.yaml`：MySQL（PVC + ConfigMap + Deployment + Service）
-- `docs/backend.yaml`：EAuth 单服务部署（配置 Secret + Deployment + Service + 可选 Ingress）
+- `docs/backend.yaml`：EAuth 后端（Secret + Deployment + Service）
+- `docs/frontend.yaml`：EAuth 前端控制台（Secret + Deployment + Service + Ingress）
 
 默认部署命名空间：`efucloud`。
 
 ## 1. 部署前准备
 
-- 已安装 Kubernetes 与 Ingress NGINX（如需域名访问）
-- 已准备镜像拉取凭据（如私有仓库）
-- 已有可用 StorageClass（示例中 `mysql-local-retain`）
-- 部署前请先修改以下配置：
+- 已安装 Kubernetes。
+- 如需域名访问，请提前安装 Ingress NGINX。
+- 如镜像仓库为私有仓库，请准备镜像拉取凭据。
+- 请先按环境修改以下配置：
   - `docs/mysql.yaml`：`MYSQL_ROOT_PASSWORD`、`MYSQL_DATABASE`
-  - `docs/backend.yaml`：`Secret.stringData.config.yaml` 中的 `mysql` / `email` / `serverAddress`
-  - `docs/backend.yaml`：如需域名访问，请同步修改 Ingress 中的域名、IngressClass、TLS 证书 secret
+  - `docs/backend.yaml`：`Secret.stringData.config.yaml` 中的 `mysql`、`email`、`serverAddress`
+  - `docs/frontend.yaml`：前端镜像地址、域名、TLS 配置、Nginx 反向代理参数
+
+`serverAddress` 应配置为用户访问前端控制台的公网地址，而不是后端 Service 地址。
 
 ## 2. 推荐部署顺序
 
@@ -26,54 +29,46 @@
 kubectl apply -f docs/namespace.yaml
 kubectl apply -f docs/mysql.yaml
 kubectl apply -f docs/backend.yaml
-kubectl port-forward -n efucloud svc/eauth 9001:80
+kubectl apply -f docs/frontend.yaml
 ```
 
-也可以一次性执行：
+如果已经完成环境定制，也可以直接执行：
 
 ```bash
 kubectl apply -f docs/
 ```
 
-## 3. 状态检查
+## 3. 访问方式
+
+- 后端 Service：`eauth.efucloud.svc.cluster.local:9001`
+- 前端 Service：`eauth-console.efucloud.svc.cluster.local:80`
+- 对外访问入口：`docs/frontend.yaml` 中定义的 Ingress
+
+本地验证可使用端口转发：
+
+```bash
+kubectl -n efucloud port-forward svc/eauth 9001:9001
+kubectl -n efucloud port-forward svc/eauth-console 8000:80
+```
+
+## 4. 状态检查
 
 ```bash
 kubectl -n efucloud get pods,svc,deploy,ingress
-```
-
-查看后端日志：
-
-```bash
 kubectl -n efucloud logs -f deploy/eauth
+kubectl -n efucloud logs -f deploy/eauth-console
 ```
 
-## 4. 联通验证
+## 5. 联通验证
 
-集群内统一访问地址：
-
-- `http://eauth.efucloud.svc.cluster.local`
-
-本地端口转发后访问：
-
-- 控制台首页：`http://127.0.0.1:9001/`
-- 健康检查：`http://127.0.0.1:9001/api/health`
+- 前端首页：`http://127.0.0.1:8000`
+- 后端健康检查：`http://127.0.0.1:9001/api/health`
 - OpenAPI：`http://127.0.0.1:9001/api/v1/swagger.json`
-- OIDC Metadata：`http://127.0.0.1:9001/api/.well-known/openid-configuration`
+- OIDC 元数据：通过前端域名访问 `/.well-known/openid-configuration`
 
-健康检查接口：
+## 6. 生产环境建议
 
-- `GET /api/health`
-- `GET /api/v1/swagger.json`
-- `GET /metrics`
-
-如果使用 `docs/backend.yaml` 中的 Ingress，还可以通过根路径访问前端页面：
-
-- `GET /`
-- `GET /.well-known/openid-configuration`（Ingress 做了兼容转发）
-
-## 5. 生产环境建议
-
-- 当前服务配置采用 `Secret.stringData`，建议对接外部密钥管理（如 SealedSecrets / External Secrets）
-- MySQL 建议使用独立实例或 StatefulSet，并启用备份策略
-- `uploads` 建议使用 PVC 或对象存储，避免 Pod 重建导致数据丢失
-- Ingress 建议强制 TLS，并配置可观测性（访问日志/错误日志/告警）
+- 后端配置目前通过 `Secret.stringData` 管理，建议接入 SealedSecrets 或 External Secrets。
+- `uploads` 建议改为 PVC 或对象存储，避免 Pod 重建后文件丢失。
+- MySQL 建议使用独立实例或 StatefulSet，并配置备份。
+- 前端 Ingress 建议启用 TLS，并根据实际域名限制 CORS。

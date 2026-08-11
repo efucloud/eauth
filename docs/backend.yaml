@@ -6,7 +6,7 @@ metadata:
 type: Opaque
 stringData:
   config.yaml: |
-    # 用于 OIDC 元数据、回调地址等外部访问地址生成
+    # 将会作为/.well-known/openid-configuration中的地址信息
     serverAddress: "http://eauth-demo.efucloud.com"
     tokenPeriod: 16
     uploadPath: "/efucloud/uploads"
@@ -116,55 +116,6 @@ spec:
     app: eauth
   ports:
     - name: http
-      port: 80
+      port: 9001
       targetPort: 9001
       protocol: TCP
----
-# Optional ingress for the unified EAuth service.
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: eauth
-  namespace: efucloud
-  annotations:
-    nginx.ingress.kubernetes.io/proxy-body-size: 2000m
-spec:
-  ingressClassName: nginx
-  rules:
-    - host: eauth-demo.efucloud.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: eauth
-                port:
-                  number: 80
-  # tls:
-  #   - hosts:
-  #       - eauth-demo.efucloud.com
-  #     secretName: eauth-tls
----
-# Compatibility ingress for clients or UI links that still access
-# /.well-known/openid-configuration at the root path.
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: eauth-oidc-discovery
-  namespace: efucloud
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /api/.well-known/openid-configuration
-spec:
-  ingressClassName: nginx
-  rules:
-    - host: eauth-demo.efucloud.com
-      http:
-        paths:
-          - path: /.well-known/openid-configuration
-            pathType: Exact
-            backend:
-              service:
-                name: eauth
-                port:
-                  number: 80

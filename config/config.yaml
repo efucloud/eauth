@@ -26,6 +26,6 @@ mysql:
   password: EfuCloud
   skipInitializeWithVersion: false
   user: root
-serverAddress: http://localhost:9001
+serverAddress: http://localhost:8000
 tokenPeriod: 16
-uploadPath: ./uploads
+uploadPath: ""
