@@ -1,0 +1,2 @@
+Keep this directory in git.
+Generated frontend assets under pkg/embeds/web are rebuilt locally and should not be committed.

@@ -55,6 +55,7 @@ embed-web: frontend
 	cp -R "$(WEB_DIST_DIR)/." "$(EMBED_WEB_TMP_DIR)/"
 	rm -rf "$(EMBED_WEB_DIR)"
 	mv "$(EMBED_WEB_TMP_DIR)" "$(EMBED_WEB_DIR)"
+	@touch "$(EMBED_WEB_DIR)/.ignore"
 	@printf 'Embedded frontend assets into %s\n' "$(EMBED_WEB_DIR)"
 
 image: embed-web

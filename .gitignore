@@ -28,3 +28,7 @@ test
 /web/build
 /web/.temp
 /web/.history
+
+# generated embedded frontend assets
+/pkg/embeds/web/**
+!/pkg/embeds/web/.ignore

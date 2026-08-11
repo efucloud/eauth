@@ -25,5 +25,6 @@ mkdir -p "${EMBED_WEB_TMP_DIR}"
 cp -R "${WEB_DIST_DIR}/." "${EMBED_WEB_TMP_DIR}/"
 rm -rf "${EMBED_WEB_DIR}"
 mv "${EMBED_WEB_TMP_DIR}" "${EMBED_WEB_DIR}"
+touch "${EMBED_WEB_DIR}/.ignore"
 
 echo "Embedded frontend assets into ${EMBED_WEB_DIR}"
