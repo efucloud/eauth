@@ -1,0 +1,195 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - "v*"
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: Format, Test, Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+          cache-dependency-path: web/yarn.lock
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Check formatting
+        run: |
+          unformatted=$(gofmt -l cmd pkg config)
+          if [ -n "$unformatted" ]; then
+            echo "The following files need gofmt:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: Build and embed web assets
+        run: ./scripts/build-web-embed.sh
+
+      - name: Run smoke tests
+        run: go test ./cmd/... ./pkg/config/...
+
+      - name: Build server entrypoint
+        run: go build -o /tmp/eauth ./cmd/start.go
+
+  docker:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: smoke
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+          cache-dependency-path: web/yarn.lock
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Build and embed web assets
+        run: ./scripts/build-web-embed.sh
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+            type=sha
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Prepare build metadata
+        id: build-meta
+        run: echo "build_date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_OUTPUT"
+
+      - name: Build image for PR validation
+        if: github.event_name == 'pull_request'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile.github
+          platforms: linux/amd64
+          push: false
+          provenance: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            GIT_COMMIT=${{ github.sha }}
+            BUILD_DATE=${{ steps.build-meta.outputs.build_date }}
+
+      - name: Build and push image
+        if: github.event_name != 'pull_request'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile.github
+          platforms: linux/amd64,linux/arm64
+          push: true
+          provenance: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            GIT_COMMIT=${{ github.sha }}
+            BUILD_DATE=${{ steps.build-meta.outputs.build_date }}
+
+      - name: Set GHCR package visibility to public
+        if: github.event_name != 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const owner = context.repo.owner.toLowerCase();
+            const repo = context.repo.repo.toLowerCase();
+            const candidates = [repo, `${owner}/${repo}`];
+            const failures = [];
+            let updated = false;
+
+            for (const packageName of candidates) {
+              try {
+                await github.request('PATCH /orgs/{org}/packages/{package_type}/{package_name}/visibility', {
+                  org: owner,
+                  package_type: 'container',
+                  package_name: packageName,
+                  visibility: 'public',
+                });
+                core.info(`Set org package visibility to public: ${owner}/${packageName}`);
+                updated = true;
+                break;
+              } catch (err) {
+                failures.push(`org:${packageName}:${err.status || 'unknown'}:${err.message}`);
+              }
+            }
+
+            if (!updated) {
+              for (const packageName of candidates) {
+                try {
+                  await github.request('PATCH /user/packages/{package_type}/{package_name}/visibility', {
+                    package_type: 'container',
+                    package_name: packageName,
+                    visibility: 'public',
+                  });
+                  core.info(`Set user package visibility to public: ${packageName}`);
+                  updated = true;
+                  break;
+                } catch (err) {
+                  failures.push(`user:${packageName}:${err.status || 'unknown'}:${err.message}`);
+                }
+              }
+            }
+
+            if (!updated) {
+              core.warning(`Unable to set GHCR visibility to public automatically. ${failures.join(' | ')}`);
+              core.warning('Image push is not blocked. If needed, set package visibility to public manually in GitHub Packages settings.');
+            }

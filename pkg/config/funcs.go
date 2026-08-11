@@ -61,6 +61,7 @@ func createDBConnection() (err error) {
 			Params: map[string]string{
 				"charset": c.Charset,
 			},
+			AllowNativePasswords: true,
 		}
 		dsn := dsnConfig.FormatDSN()
 		Logger.Infof("database connection: %s", maskMySQLDSN(dsn))

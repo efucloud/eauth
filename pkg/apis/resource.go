@@ -27,6 +27,7 @@ func GetWebServices(container *restful.Container) *restful.WebService {
 
 	})
 	ws.Consumes(restful.MIME_JSON).Produces(restful.MIME_JSON)
+	StaticResource{}.AddWebService(ws)
 	v1.ApplicationResource{Svc: services.ApplicationService{}}.AddWebService(ws)
 	v1.DashboardResource{Svc: services.DashboardService{}}.AddWebService(ws)
 	v1.FaceRecognitionResource{Svc: services.FaceRecognitionService{}}.AddWebService(ws)
