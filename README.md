@@ -4,8 +4,6 @@
 
 EAuth 是一个面向企业场景的统一认证系统，定位类似 Auth0 / Dex 的认证能力平台。  
 它既可以作为业务系统的 OIDC 认证中心，也支持对接外部第三方认证平台，统一账号登录体验与认证策略。
-
-## 前端仓库地址：https://github.com/efucloud/eauth-console
 ## 项目背景
 
 在多系统、多组织、多终端并存的环境下，认证体系往往面临以下问题：
@@ -78,8 +76,8 @@ go run ./cmd -c ./config/config.prod.yaml
 ### 示例（最小可用）
 
 ```yaml
-# serverAddress 为前端地址，为.well-known/openid-configuration相关参数提供地址信息
-serverAddress: "http://localhost:8000" 
+# serverAddress 为统一服务对外地址，用于 .well-known/openid-configuration 等元数据生成
+serverAddress: "http://localhost:9001"
 tokenPeriod: 16
 uploadPath: "./uploads"
 
@@ -114,6 +112,6 @@ email:
 - 部署清单：
   - `docs/namespace.yaml`
   - `docs/mysql.yaml`
-  - `docs/backend.yaml`
-  - `docs/frontend.yaml`
+  - `docs/backend.yaml`：统一服务 Deployment + Service
+  - `docs/frontend.yaml`：统一服务 Ingress（可选）
 - 使用说明：`docs/README.md`

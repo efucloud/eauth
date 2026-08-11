@@ -6,8 +6,8 @@
 
 - `docs/namespace.yaml`：命名空间（`efucloud`）
 - `docs/mysql.yaml`：MySQL（PVC + ConfigMap + Deployment + Service）
-- `docs/backend.yaml`：EAuth 后端（Secret + Deployment + Service）
-- `docs/frontend.yaml`：EAuth 前端控制台（Deployment + Service + Ingress）
+- `docs/backend.yaml`：EAuth 单服务部署（配置 Secret + Deployment + Service）
+- `docs/frontend.yaml`：EAuth 单服务 Ingress（可选）
 
 默认部署命名空间：`efucloud`。
 
@@ -19,7 +19,7 @@
 - 部署前请先修改以下配置：
   - `docs/mysql.yaml`：`MYSQL_ROOT_PASSWORD`、`MYSQL_DATABASE`
   - `docs/backend.yaml`：`Secret.stringData.config.yaml` 中的 `mysql` / `email` / `serverAddress`
-  - `docs/frontend.yaml`：域名、TLS 证书 secret、前端镜像版本
+  - `docs/frontend.yaml`：域名、IngressClass、TLS 证书 secret
 
 ## 2. 推荐部署顺序
 
@@ -28,7 +28,7 @@ kubectl apply -f docs/namespace.yaml
 kubectl apply -f docs/mysql.yaml
 kubectl apply -f docs/backend.yaml
 kubectl apply -f docs/frontend.yaml
-kubectl port-forward -n efucloud svc/eauth-console 8000:80 
+kubectl port-forward -n efucloud svc/eauth 9001:80
 ```
 
 也可以一次性执行：
@@ -49,26 +49,33 @@ kubectl -n efucloud get pods,svc,deploy,ingress
 kubectl -n efucloud logs -f deploy/eauth
 ```
 
-查看前端日志：
-
-```bash
-kubectl -n efucloud logs -f deploy/eauth-console
-```
-
 ## 4. 联通验证
 
-集群内访问后端：
+集群内统一访问地址：
 
-- `http://eauth.efucloud.svc.cluster.local:9001`
+- `http://eauth.efucloud.svc.cluster.local`
+
+本地端口转发后访问：
+
+- 控制台首页：`http://127.0.0.1:9001/`
+- 健康检查：`http://127.0.0.1:9001/api/health`
+- OpenAPI：`http://127.0.0.1:9001/api/v1/swagger.json`
+- OIDC Metadata：`http://127.0.0.1:9001/api/.well-known/openid-configuration`
 
 健康检查接口：
 
+- `GET /api/health`
 - `GET /api/v1/swagger.json`
 - `GET /metrics`
 
+如果使用 `docs/frontend.yaml` 中的 Ingress，还可以通过根路径访问前端页面：
+
+- `GET /`
+- `GET /.well-known/openid-configuration`（Ingress 做了兼容转发）
+
 ## 5. 生产环境建议
 
-- 当前后端配置采用 `Secret.stringData`，建议对接外部密钥管理（如 SealedSecrets / External Secrets）
+- 当前服务配置采用 `Secret.stringData`，建议对接外部密钥管理（如 SealedSecrets / External Secrets）
 - MySQL 建议使用独立实例或 StatefulSet，并启用备份策略
 - `uploads` 建议使用 PVC 或对象存储，避免 Pod 重建导致数据丢失
-- 前端 Ingress 建议强制 TLS，并配置可观测性（访问日志/错误日志/告警）
+- Ingress 建议强制 TLS，并配置可观测性（访问日志/错误日志/告警）

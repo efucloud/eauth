@@ -5,10 +5,6 @@
 EAuth is a unified authentication platform for enterprise scenarios, positioned similarly to Auth0 and Dex.  
 It can act as an OIDC identity provider for business systems and can also integrate with external third-party identity platforms to provide a consistent login experience and centralized authentication policy.
 
-## Frontend Repository
-
-https://github.com/efucloud/eauth-console
-
 ## Project Background
 
 In multi-system, multi-organization, and multi-device environments, identity and authentication often face these challenges:
@@ -80,8 +76,9 @@ go run ./cmd -c ./config/config.prod.yaml
 ### Minimal Example
 
 ```yaml
-# serverAddress should be the frontend URL and is used by .well-known/openid-configuration metadata
-serverAddress: "http://localhost:8000"
+# serverAddress should be the public URL of the unified service and is used for
+# .well-known/openid-configuration and other OIDC metadata
+serverAddress: "http://localhost:9001"
 tokenPeriod: 16
 uploadPath: "./uploads"
 
@@ -115,7 +112,7 @@ Deployment manifests are provided:
 
 - `docs/namespace.yaml`
 - `docs/mysql.yaml`
-- `docs/backend.yaml`
-- `docs/frontend.yaml`
+- `docs/backend.yaml`: unified service Deployment + Service
+- `docs/frontend.yaml`: unified service Ingress (optional)
 
 Deployment guide: `docs/README.en.md`.

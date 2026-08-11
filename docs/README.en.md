@@ -6,8 +6,8 @@ This guide corresponds to the following Kubernetes manifests:
 
 - `docs/namespace.yaml`: Namespace (`efucloud`)
 - `docs/mysql.yaml`: MySQL (PVC + ConfigMap + Deployment + Service)
-- `docs/backend.yaml`: EAuth backend (Secret + Deployment + Service)
-- `docs/frontend.yaml`: EAuth frontend console (Deployment + Service + Ingress)
+- `docs/backend.yaml`: Unified EAuth service (config Secret + Deployment + Service)
+- `docs/frontend.yaml`: Unified-service Ingress (optional)
 
 Default deployment namespace: `efucloud`.
 
@@ -19,7 +19,7 @@ Default deployment namespace: `efucloud`.
 - Update these settings before deployment:
   - `docs/mysql.yaml`: `MYSQL_ROOT_PASSWORD`, `MYSQL_DATABASE`
   - `docs/backend.yaml`: `mysql`, `email`, and `serverAddress` under `Secret.stringData.config.yaml`
-  - `docs/frontend.yaml`: domain, TLS secret, frontend image version
+  - `docs/frontend.yaml`: domain, IngressClass, and TLS secret
 
 ## 2. Recommended Apply Order
 
@@ -28,7 +28,7 @@ kubectl apply -f docs/namespace.yaml
 kubectl apply -f docs/mysql.yaml
 kubectl apply -f docs/backend.yaml
 kubectl apply -f docs/frontend.yaml
-kubectl port-forward -n efucloud svc/eauth-console 8000:80
+kubectl port-forward -n efucloud svc/eauth 9001:80
 ```
 
 You can also apply all manifests at once:
@@ -49,26 +49,33 @@ Backend logs:
 kubectl -n efucloud logs -f deploy/eauth
 ```
 
-Frontend logs:
-
-```bash
-kubectl -n efucloud logs -f deploy/eauth-console
-```
-
 ## 4. Connectivity Verification
 
-Backend service access inside cluster:
+Unified service access inside the cluster:
 
-- `http://eauth.efucloud.svc.cluster.local:9001`
+- `http://eauth.efucloud.svc.cluster.local`
+
+After local port-forward:
+
+- Console root: `http://127.0.0.1:9001/`
+- Health check: `http://127.0.0.1:9001/api/health`
+- OpenAPI: `http://127.0.0.1:9001/api/v1/swagger.json`
+- OIDC metadata: `http://127.0.0.1:9001/api/.well-known/openid-configuration`
 
 Health check endpoints:
 
+- `GET /api/health`
 - `GET /api/v1/swagger.json`
 - `GET /metrics`
 
+If you apply the optional Ingress in `docs/frontend.yaml`, the frontend can also be accessed directly from the root path:
+
+- `GET /`
+- `GET /.well-known/openid-configuration` (compatibility routing handled by Ingress)
+
 ## 5. Production Recommendations
 
-- Backend config is currently managed with `Secret.stringData`; consider external secret management (for example SealedSecrets or External Secrets).
+- Service config is currently managed with `Secret.stringData`; consider external secret management (for example SealedSecrets or External Secrets).
 - For MySQL, prefer a dedicated instance or StatefulSet and enable backup policies.
 - For `uploads`, use PVC or object storage to avoid data loss during pod rescheduling.
-- Enforce TLS on frontend Ingress and add observability (access logs, error logs, alerting).
+- Enforce TLS on Ingress and add observability (access logs, error logs, alerting).

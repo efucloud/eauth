@@ -6,8 +6,8 @@ metadata:
 type: Opaque
 stringData:
   config.yaml: |
-    # 将会作为/.well-known/openid-configuration中的地址信息
-    serverAddress: "http://eauth-demo.efucloud.com" 
+    # 用于 OIDC 元数据、回调地址等外部访问地址生成
+    serverAddress: "http://eauth-demo.efucloud.com"
     tokenPeriod: 16
     uploadPath: "/efucloud/uploads"
     loginConfig:
@@ -57,48 +57,51 @@ spec:
         app: eauth
     spec:
       containers:
-      - name: eauth
-        image: registry.cn-shenzhen.aliyuncs.com/efucloud-public/eauth:v1.0.0.202603231923
-        imagePullPolicy: IfNotPresent
-        ports:
-        - name: http
-          containerPort: 9001
-          protocol: TCP
-        readinessProbe:
-          httpGet:
-            path: /api/health
-            port: 9001
-          initialDelaySeconds: 8
-          periodSeconds: 10
-          timeoutSeconds: 3
-          failureThreshold: 6
-        livenessProbe:
-          httpGet:
-            path: /api/health
-            port: 9001
-          initialDelaySeconds: 20
-          periodSeconds: 15
-          timeoutSeconds: 3
-          failureThreshold: 5
-        resources:
-          requests:
-            cpu: 200m
-            memory: 256Mi
-          limits:
-            cpu: "1"
-            memory: 1Gi
-        volumeMounts:
-        - name: config
-          mountPath: /efucloud/config/config.yaml
-          subPath: config.yaml
-        - name: uploads
-          mountPath: /efucloud/uploads
+        - name: eauth
+          image: registry.cn-shenzhen.aliyuncs.com/efucloud-public/eauth:v1.0.0.202603231923
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 9001
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 9001
+            initialDelaySeconds: 8
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 9001
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            timeoutSeconds: 3
+            failureThreshold: 5
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          volumeMounts:
+            - name: config
+              mountPath: /efucloud/config/config.yaml
+              subPath: config.yaml
+            - name: uploads
+              mountPath: /efucloud/uploads
+          env:
+            - name: TZ
+              value: Asia/Shanghai
       volumes:
-      - name: config
-        secret:
-          secretName: eauth-config
-      - name: uploads
-        emptyDir: {}
+        - name: config
+          secret:
+            secretName: eauth-config
+        - name: uploads
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
@@ -112,7 +115,7 @@ spec:
   selector:
     app: eauth
   ports:
-  - name: http
-    port: 9001
-    targetPort: 9001
-    protocol: TCP
+    - name: http
+      port: 80
+      targetPort: 9001
+      protocol: TCP
