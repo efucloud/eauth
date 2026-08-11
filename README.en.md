@@ -239,7 +239,6 @@ Deployment manifests are provided:
 
 - `docs/namespace.yaml`
 - `docs/mysql.yaml`
-- `docs/backend.yaml`: unified service Deployment + Service
-- `docs/frontend.yaml`: unified service Ingress (optional)
+- `docs/backend.yaml`: unified service Deployment + Service + optional Ingress
 
 Deployment guide: `docs/README.en.md`.

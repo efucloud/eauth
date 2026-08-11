@@ -6,8 +6,7 @@
 
 - `docs/namespace.yaml`：命名空间（`efucloud`）
 - `docs/mysql.yaml`：MySQL（PVC + ConfigMap + Deployment + Service）
-- `docs/backend.yaml`：EAuth 单服务部署（配置 Secret + Deployment + Service）
-- `docs/frontend.yaml`：EAuth 单服务 Ingress（可选）
+- `docs/backend.yaml`：EAuth 单服务部署（配置 Secret + Deployment + Service + 可选 Ingress）
 
 默认部署命名空间：`efucloud`。
 
@@ -19,7 +18,7 @@
 - 部署前请先修改以下配置：
   - `docs/mysql.yaml`：`MYSQL_ROOT_PASSWORD`、`MYSQL_DATABASE`
   - `docs/backend.yaml`：`Secret.stringData.config.yaml` 中的 `mysql` / `email` / `serverAddress`
-  - `docs/frontend.yaml`：域名、IngressClass、TLS 证书 secret
+  - `docs/backend.yaml`：如需域名访问，请同步修改 Ingress 中的域名、IngressClass、TLS 证书 secret
 
 ## 2. 推荐部署顺序
 
@@ -27,7 +26,6 @@
 kubectl apply -f docs/namespace.yaml
 kubectl apply -f docs/mysql.yaml
 kubectl apply -f docs/backend.yaml
-kubectl apply -f docs/frontend.yaml
 kubectl port-forward -n efucloud svc/eauth 9001:80
 ```
 
@@ -68,7 +66,7 @@ kubectl -n efucloud logs -f deploy/eauth
 - `GET /api/v1/swagger.json`
 - `GET /metrics`
 
-如果使用 `docs/frontend.yaml` 中的 Ingress，还可以通过根路径访问前端页面：
+如果使用 `docs/backend.yaml` 中的 Ingress，还可以通过根路径访问前端页面：
 
 - `GET /`
 - `GET /.well-known/openid-configuration`（Ingress 做了兼容转发）

@@ -239,6 +239,5 @@ email:
 - 部署清单：
   - `docs/namespace.yaml`
   - `docs/mysql.yaml`
-  - `docs/backend.yaml`：统一服务 Deployment + Service
-  - `docs/frontend.yaml`：统一服务 Ingress（可选）
+  - `docs/backend.yaml`：统一服务 Deployment + Service + 可选 Ingress
 - 使用说明：`docs/README.md`

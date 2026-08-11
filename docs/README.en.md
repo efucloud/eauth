@@ -6,8 +6,7 @@ This guide corresponds to the following Kubernetes manifests:
 
 - `docs/namespace.yaml`: Namespace (`efucloud`)
 - `docs/mysql.yaml`: MySQL (PVC + ConfigMap + Deployment + Service)
-- `docs/backend.yaml`: Unified EAuth service (config Secret + Deployment + Service)
-- `docs/frontend.yaml`: Unified-service Ingress (optional)
+- `docs/backend.yaml`: Unified EAuth service (config Secret + Deployment + Service + optional Ingress)
 
 Default deployment namespace: `efucloud`.
 
@@ -19,7 +18,7 @@ Default deployment namespace: `efucloud`.
 - Update these settings before deployment:
   - `docs/mysql.yaml`: `MYSQL_ROOT_PASSWORD`, `MYSQL_DATABASE`
   - `docs/backend.yaml`: `mysql`, `email`, and `serverAddress` under `Secret.stringData.config.yaml`
-  - `docs/frontend.yaml`: domain, IngressClass, and TLS secret
+  - `docs/backend.yaml`: if you need domain access, also update the Ingress host, IngressClass, and TLS secret
 
 ## 2. Recommended Apply Order
 
@@ -27,7 +26,6 @@ Default deployment namespace: `efucloud`.
 kubectl apply -f docs/namespace.yaml
 kubectl apply -f docs/mysql.yaml
 kubectl apply -f docs/backend.yaml
-kubectl apply -f docs/frontend.yaml
 kubectl port-forward -n efucloud svc/eauth 9001:80
 ```
 
@@ -68,7 +66,7 @@ Health check endpoints:
 - `GET /api/v1/swagger.json`
 - `GET /metrics`
 
-If you apply the optional Ingress in `docs/frontend.yaml`, the frontend can also be accessed directly from the root path:
+If you apply the optional Ingress in `docs/backend.yaml`, the frontend can also be accessed directly from the root path:
 
 - `GET /`
 - `GET /.well-known/openid-configuration` (compatibility routing handled by Ingress)

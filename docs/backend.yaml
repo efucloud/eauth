@@ -119,3 +119,52 @@ spec:
       port: 80
       targetPort: 9001
       protocol: TCP
+---
+# Optional ingress for the unified EAuth service.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: eauth
+  namespace: efucloud
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 2000m
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: eauth-demo.efucloud.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: eauth
+                port:
+                  number: 80
+  # tls:
+  #   - hosts:
+  #       - eauth-demo.efucloud.com
+  #     secretName: eauth-tls
+---
+# Compatibility ingress for clients or UI links that still access
+# /.well-known/openid-configuration at the root path.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: eauth-oidc-discovery
+  namespace: efucloud
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /api/.well-known/openid-configuration
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: eauth-demo.efucloud.com
+      http:
+        paths:
+          - path: /.well-known/openid-configuration
+            pathType: Exact
+            backend:
+              service:
+                name: eauth
+                port:
+                  number: 80
