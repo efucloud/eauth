@@ -15,3 +15,16 @@ test
 /uploads
 *.go-bak
 /casdoor
+
+# frontend workspace
+/web/node_modules
+/web/dist
+/web/.umi
+/web/.umi-production
+/web/.umi-test
+/web/.cache
+/web/coverage
+/web/.eslintcache
+/web/build
+/web/.temp
+/web/.history
