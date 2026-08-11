@@ -1,5 +1,5 @@
 # 构建阶段
-FROM registry.cn-shenzhen.aliyuncs.com/efucloud-public/golang:1.25.5 AS builder
+FROM registry.cn-shenzhen.aliyuncs.com/efucloud-public/golang:1.26.4 AS builder
 
 # buildx 自动传入的跨平台参数（无需手动传）
 ARG TARGETOS
@@ -23,7 +23,7 @@ RUN case "$TARGETARCH" in \
         *) echo "Unsupported TARGETARCH: $TARGETARCH"; exit 1 ;; \
     esac && \
     CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$GOARCH go build \
-      -ldflags "-X 'github.com/efucloud/eauth/pkg/config.GoVersion=1.25' \
+      -ldflags "-X 'github.com/efucloud/eauth/pkg/config.GoVersion=1.26.4' \
                 -X 'github.com/efucloud/eauth/pkg/config.Commit=${GIT_COMMIT}' \
                 -X 'github.com/efucloud/eauth/pkg/config.BuildDate=${BUILD_DATE}'" \
       -o ./output/eauth-$TARGETOS-$TARGETARCH \
@@ -52,6 +52,6 @@ WORKDIR /efucloud
 COPY --from=builder /workspace/output/eauth-$TARGETOS-$TARGETARCH /usr/local/bin/eauth
 
 
-EXPOSE 9004
+EXPOSE 9001
 
 ENTRYPOINT ["/usr/local/bin/eauth", "-c", "./config/config.yaml"]
