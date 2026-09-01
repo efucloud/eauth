@@ -168,12 +168,6 @@ mysql:
   password: "CHANGE_ME"
   dbname: "eauth"
   charset: "utf8mb4"
-  loc: "Asia/Shanghai"
-  defaultStringSize: 0
-  disableDatetimePrecision: false
-  dontSupportRenameColumn: false
-  dontSupportRenameIndex: false
-  skipInitializeWithVersion: false
 
 email:
   smtpServer: "smtp.qq.com"

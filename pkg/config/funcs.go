@@ -45,11 +45,6 @@ func createDBConnection() (err error) {
 		Logger.Info("database is Mysql")
 		ApplicationConfig.Mysql.Default()
 		c := ApplicationConfig.Mysql
-		loc, locErr := time.LoadLocation(c.Loc)
-		if locErr != nil {
-			Logger.Warnf("invalid mysql location %q, fallback to Local: %v", c.Loc, locErr)
-			loc = time.Local
-		}
 		dsnConfig := mysqldriver.Config{
 			User:      c.User,
 			Passwd:    c.Password,
@@ -57,7 +52,7 @@ func createDBConnection() (err error) {
 			Addr:      c.Host,
 			DBName:    c.Dbname,
 			ParseTime: true,
-			Loc:       loc,
+			Loc:       time.Local,
 			Params: map[string]string{
 				"charset": c.Charset,
 			},
@@ -65,14 +60,7 @@ func createDBConnection() (err error) {
 		}
 		dsn := dsnConfig.FormatDSN()
 		Logger.Infof("database connection: %s", maskMySQLDSN(dsn))
-		DBConnect, err = gorm.Open(gormmysql.New(gormmysql.Config{
-			DSN:                       dsn,
-			DefaultStringSize:         c.DefaultStringSize,
-			DisableDatetimePrecision:  c.DisableDatetimePrecision,
-			DontSupportRenameIndex:    c.DontSupportRenameIndex,
-			DontSupportRenameColumn:   c.DontSupportRenameColumn,
-			SkipInitializeWithVersion: c.SkipInitializeWithVersion,
-		}), &gorm.Config{
+		DBConnect, err = gorm.Open(gormmysql.Open(dsn), &gorm.Config{
 			NowFunc: func() time.Time {
 				return time.Now().Local()
 			},

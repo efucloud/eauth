@@ -17,14 +17,8 @@ loginConfig:
 mysql:
   charset: utf8
   dbname: eauth
-  defaultStringSize: 0
-  disableDatetimePrecision: false
-  dontSupportRenameColumn: false
-  dontSupportRenameIndex: false
   host: localhost:3306
-  loc: ""
   password: EfuCloud
-  skipInitializeWithVersion: false
   user: root
 serverAddress: http://localhost:8000
 tokenPeriod: 16
